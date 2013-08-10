@@ -29,11 +29,16 @@ var App = Backbone.Base.extend({
 
   bindEvents: function() {
     this.currentUser.on("userSignedIn", this.handleUserSignIn);
+    this.on("goBack", this.handleBackButton);
   },
 
   handleUserSignIn: function() {
     this.setupAuthHeader();
     this.tasks.fetch({ success: this.handleTasksLoaded });
+  },
+
+  handleBackButton: function() {
+    this.viewHandler.back();
   },
 
   initViews: function() {

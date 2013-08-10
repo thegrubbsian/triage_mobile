@@ -1,6 +1,12 @@
+<% if (typeof showBackButton === "undefined") { showBackButton = false; } %>
 <header class="bar-title">
+  <% if (showBackButton) { %>
+  <a class="button" id="back-button">
+    <span class="icon-arrow-left"></span>
+  </a>
+  <% } %>
   <h1 class="title">Triage</h1>
-  <a class="button" href="#">
+  <a id="settings-button" class="button">
     <span class="icon-cog"></span>
   </a>
 </header>

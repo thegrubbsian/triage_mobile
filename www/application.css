@@ -1239,11 +1239,16 @@ body {
   height: 100%;
   width: 100%; }
 
-a.button span[class*="icon-"] {
+a.button span[class*="icon-"], #back-button span[class*="icon-"] {
   display: block;
   font-size: 1.7em;
   line-height: 0.7em;
-  margin: 0.2em 0; }
+  margin: 0.2em 0;
+  color: #fff; }
+
+.bar-standard h3 {
+  color: #555;
+  margin: 0.4em 0.7em; }
 
 ul.segmented-controller li a {
   padding: 8px 16px 6px 16px; }
@@ -1285,5 +1290,16 @@ ul.segmented-controller li a span.label {
     font-size: 1.5em;
     color: #bfbfbf; }
 
+#task-detail .bar-standard {
+  top: 44px; }
 #task-detail .content {
   top: 88px; }
+#task-detail textarea {
+  height: 10em; }
+#task-detail .action-group {
+  overflow: hidden; }
+  #task-detail .action-group a.button {
+    float: left;
+    width: 40%; }
+    #task-detail .action-group a.button:last-child {
+      float: right; }

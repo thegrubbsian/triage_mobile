@@ -1,18 +1,37 @@
 <%= Templates["_header"]({ showBackButton: true }) %>
-<%= Templates["_tabs"]({ selected: task.get("state") }) %>
+<nav class="bar-standard">
+  <h3>Edit Task</h3>
+</nav>
 
 <div class="content">
   <div class="content-inner">
     <form>
-      <div class="field">
-        <label>Name</label>
-        <input type="text" name="name" value="<%= task.get("name") %>" />
+      <div class="input-group">
+        <div class="input-row">
+          <label>Title</label>
+          <input type="text" name="name" value="<%= task.get("name") %>" />
+        </div>
+        <div class="input-row">
+          <label>Due Date</label>
+          <input type="date" name="due_at" placeholder="Due Date" />
+        </div>
       </div>
-      <div class="field">
-        <label>Description</label>
-        <textarea name="description">
-          <%= task.get("description") %>
-        </textarea>
+      <textarea name="description" placeholder="Notes"><%= task.get("description") %></textarea>
+      <ul class="segmented-controller">
+        <li class="active">
+          <a class="now">Now</a>
+        </li>
+        <li>
+          <a class="later">Later</a>
+        </li>
+        <li>
+          <a class="done">Done</a>
+        </li>
+      </ul>
+      <a id="save-button" class="button-main button-block">Save</a>
+      <div class="action-group">
+        <a id="archive-button" class="button-positive button">Archive</a>
+        <a id="delete-button" class="button-negative button">Delete</a>
       </div>
     </form>
   </div>
