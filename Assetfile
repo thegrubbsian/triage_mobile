@@ -1,0 +1,51 @@
+require "./build/jst_filter"
+require "./build/sass_filter"
+
+JAVASCRIPTS = [
+  "lib/jquery",
+  "lib/jquery.mobile",
+  "lib/underscore",
+  "lib/underscore_extensions",
+  "lib/moment",
+  "lib/backbone",
+  "lib/backbone_base",
+  "lib/backbone_localstorage",
+  "lib/backbone_proxy_events",
+  "lib/ratchet",
+  "namespaces",
+  "config",
+  "helpers",
+  "models/user",
+  "models/task",
+  "collections/tasks",
+  "view_handler",
+  "views/window",
+  "views/page",
+  "views/sign_in",
+  "views/sign_up",
+  "views/task_detail",
+  "views/task_item",
+  "views/task_list",
+  "app"
+]
+
+input "src/" do
+
+  output "www/"
+
+  JAVASCRIPTS.reverse.each do |file|
+    puts "[assets/js] compiling #{file}"
+    match("javascripts/#{file}.js") { concat "application.js" }
+  end
+
+  match "templates/**/*.jst" do
+    puts "[assets] compiling templates"
+    filter JstFilter, "templates.js", "templates"
+  end
+
+  match "stylesheets/application.scss" do
+    puts "[assets] compiling stylesheets"
+    filter SassFilter, "application.css"
+  end
+
+end

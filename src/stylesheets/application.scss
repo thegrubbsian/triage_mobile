@@ -1,0 +1,97 @@
+@import "lib/ratchet";
+@import "icon_font";
+
+$list-icon-color: #bfbfbf;
+
+* {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+body {
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  -webkit-user-select: none;
+  font-family: "Helvetica";
+  font-weight: 300;
+  height: 100%;
+  width: 100%;
+}
+
+a.button span[class*="icon-"] {
+  display: block;
+  font-size: 1.7em;
+  line-height: 0.7em;
+  margin: 0.2em 0;
+}
+
+ul.segmented-controller {
+
+  li {
+
+    a {
+      padding: 8px 16px 6px 16px;
+    }
+
+    a span[class*="icon-"] {
+      display: inline-block;
+      font-size: 1.3em;
+    }
+
+    a span.label {
+      display: inline-block;
+      position: relative;
+      top: -2px;
+    }
+  }
+}
+
+.content-inner {
+  margin: 1em;
+}
+
+#tabs {
+  top: 44px;
+}
+
+#now-list, #later-list, #done-list, #archived-list {
+
+  .content {
+    top: 88px;
+  }
+
+  li {
+    overflow: hidden;
+    position: relative;
+
+    span.order {
+      float: left;
+      font-size: 1.5em;
+      color: $list-icon-color;
+      margin-right: 0.25em;
+    }
+
+    span.name {
+      float: left;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 85%;
+    }
+
+    span.arrow {
+      position: absolute;
+      top: 50%;
+      margin-top: -0.5em;
+      right: 0.25em;
+      font-size: 1.5em;
+      color: $list-icon-color;
+    }
+  }
+}
+
+#task-detail {
+
+  .content {
+    top: 88px;
+  }
+}

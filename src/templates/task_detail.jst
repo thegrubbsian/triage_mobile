@@ -1,0 +1,19 @@
+<%= Templates["_header"]({ showBackButton: true }) %>
+<%= Templates["_tabs"]({ selected: task.get("state") }) %>
+
+<div class="content">
+  <div class="content-inner">
+    <form>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" name="name" value="<%= task.get("name") %>" />
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea name="description">
+          <%= task.get("description") %>
+        </textarea>
+      </div>
+    </form>
+  </div>
+</div>
