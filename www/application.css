@@ -1268,21 +1268,22 @@ ul.segmented-controller li a span.label {
 
 #now-list .content, #later-list .content, #done-list .content, #archived-list .content {
   top: 88px; }
-#now-list li, #later-list li, #done-list li, #archived-list li {
+#now-list ul.list li, #later-list ul.list li, #done-list ul.list li, #archived-list ul.list li {
   overflow: hidden;
-  position: relative; }
-  #now-list li span.order, #later-list li span.order, #done-list li span.order, #archived-list li span.order {
+  position: relative;
+  background-color: #fff; }
+  #now-list ul.list li span.order, #later-list ul.list li span.order, #done-list ul.list li span.order, #archived-list ul.list li span.order {
     float: left;
     font-size: 1.5em;
     color: #bfbfbf;
     margin-right: 0.25em; }
-  #now-list li span.name, #later-list li span.name, #done-list li span.name, #archived-list li span.name {
+  #now-list ul.list li span.name, #later-list ul.list li span.name, #done-list ul.list li span.name, #archived-list ul.list li span.name {
     float: left;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
     width: 85%; }
-  #now-list li span.arrow, #later-list li span.arrow, #done-list li span.arrow, #archived-list li span.arrow {
+  #now-list ul.list li span.arrow, #later-list ul.list li span.arrow, #done-list ul.list li span.arrow, #archived-list ul.list li span.arrow {
     position: absolute;
     top: 50%;
     margin-top: -0.5em;

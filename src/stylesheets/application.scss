@@ -71,32 +71,36 @@ ul.segmented-controller {
     top: 88px;
   }
 
-  li {
-    overflow: hidden;
-    position: relative;
+  ul.list {
 
-    span.order {
-      float: left;
-      font-size: 1.5em;
-      color: $list-icon-color;
-      margin-right: 0.25em;
-    }
-
-    span.name {
-      float: left;
-      text-overflow: ellipsis;
+    li {
       overflow: hidden;
-      white-space: nowrap;
-      width: 85%;
-    }
+      position: relative;
+      background-color: #fff;
 
-    span.arrow {
-      position: absolute;
-      top: 50%;
-      margin-top: -0.5em;
-      right: 0.25em;
-      font-size: 1.5em;
-      color: $list-icon-color;
+      span.order {
+        float: left;
+        font-size: 1.5em;
+        color: $list-icon-color;
+        margin-right: 0.25em;
+      }
+
+      span.name {
+        float: left;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        width: 85%;
+      }
+
+      span.arrow {
+        position: absolute;
+        top: 50%;
+        margin-top: -0.5em;
+        right: 0.25em;
+        font-size: 1.5em;
+        color: $list-icon-color;
+      }
     }
   }
 }
