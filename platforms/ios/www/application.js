@@ -18507,7 +18507,7 @@ Views.TaskList = PageView.extend({
   },
 
   initSorting: function() {
-    this.$list.find("li").sortable({ axis: "x", handle: "span.order" });
+    this.$list.sortable({ axis: "y", handle: "span.order" });
   }
 
 });
