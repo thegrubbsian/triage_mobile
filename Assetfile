@@ -4,6 +4,8 @@ require "./build/sass_filter"
 JAVASCRIPTS = [
   "lib/jquery",
   "lib/jquery.mobile",
+  "lib/jquery.ui",
+  "lib/jquery.ui.touch",
   "lib/underscore",
   "lib/underscore_extensions",
   "lib/moment",
