@@ -18483,8 +18483,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     Window.prototype.events = {
-      "tap header #back-button": "goBack",
-      "tap #tabs li": "changeTab"
+      "tap header #back-button": "goBack"
     };
 
     Window.prototype.initialize = function() {
@@ -18493,12 +18492,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Window.prototype.goBack = function() {
       return this.trigger("goBack");
-    };
-
-    Window.prototype.changeTab = function(e) {
-      var state;
-      state = $(e.target).closest("li").data("state");
-      return this.app.showView("" + state + "List");
     };
 
     return Window;
@@ -18777,21 +18770,32 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     TaskList.prototype.events = {
-      "change #new-task-field": "handleNewTask"
+      "change #new-task-field": "handleNewTask",
+      "tap #tabs li": "changeTab"
     };
 
     TaskList.prototype.initialize = function() {
       this.app = this.options.app;
-      this.state = this.options.state;
+      this.state = this.options.state || "now";
       return this.template = Templates.task_list;
     };
 
     TaskList.prototype.render = function() {
-      var _this = this;
       this.$el.html(this.template({
         state: this.state
       }));
       this.$list = this.$el.find("ul.list");
+      return this.renderList(this.state);
+    };
+
+    TaskList.prototype.changeTab = function(e) {
+      this.state = $(e.target).closest("li").data("state");
+      return this.renderList(this.state);
+    };
+
+    TaskList.prototype.renderList = function(state) {
+      var _this = this;
+      this.$list.empty();
       this.collection.eachInState(this.state, function(task) {
         return _this.renderItem(task);
       });
@@ -18907,7 +18911,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.initViews = function() {
-      var _this = this;
       this.viewHandler = new App.ViewHandler();
       this.windowView = new Views.Window({
         el: "body",
@@ -18926,16 +18929,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         el: "#task-detail",
         app: this
       }));
-      return _(["now", "later", "done", "archived"]).each(function(state) {
-        var listView;
-        listView = new Views.TaskList({
-          el: "#" + state + "-list",
-          app: _this,
-          collection: _this.tasks,
-          state: state
-        });
-        return _this.viewHandler.register("" + state + "List", listView);
-      });
+      return this.viewHandler.register("taskList", new Views.TaskList({
+        el: "#task-list",
+        app: this,
+        collection: this.tasks
+      }));
     };
 
     Application.prototype.authenticateUser = function() {
@@ -18949,7 +18947,9 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.handleTasksLoaded = function() {
-      return this.showView("nowList");
+      return this.showView("taskList", {
+        state: "now"
+      });
     };
 
     return Application;

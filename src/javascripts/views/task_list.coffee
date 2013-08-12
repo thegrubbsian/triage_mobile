@@ -2,15 +2,24 @@ class Views.TaskList extends Views.PageView
 
   events:
     "change #new-task-field": "handleNewTask"
+    "tap #tabs li": "changeTab"
 
   initialize: ->
     @app = @options.app
-    @state = @options.state
+    @state = @options.state || "now"
     @template = Templates.task_list
 
   render: ->
     @$el.html @template(state: @state)
     @$list = @$el.find("ul.list")
+    @renderList(@state)
+
+  changeTab: (e) ->
+    @state = $(e.target).closest("li").data("state")
+    @renderList(@state)
+
+  renderList: (state) ->
+    @$list.empty()
     @collection.eachInState @state, (task) => @renderItem(task)
     @initSorting()
 

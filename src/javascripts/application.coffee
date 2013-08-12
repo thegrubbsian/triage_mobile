@@ -35,19 +35,13 @@ class Application extends Backbone.Base
 
   initViews: ->
     @viewHandler = new App.ViewHandler()
-
     @windowView = new Views.Window(el: "body", app: this)
     @proxyEvents @windowView
-
     @viewHandler.register "signIn", new Views.SignIn(el: "#sign-in", app: this)
     @viewHandler.register "signUp", new Views.SignUp(el: "#sign-up", app: this)
     @viewHandler.register "taskDetail", new Views.TaskDetail(el: "#task-detail", app: this)
-
-    _(["now", "later", "done", "archived"]).each (state) =>
-      listView = new Views.TaskList(
-        el: "##{state}-list", app: @, collection: @tasks, state: state
-      )
-      @viewHandler.register "#{state}List", listView
+    @viewHandler.register "taskList",
+      new Views.TaskList(el: "#task-list", app: @, collection: @tasks)
 
   authenticateUser: ->
     @showView "signIn"  unless @currentUser.attemptAutoSignIn()
@@ -56,6 +50,6 @@ class Application extends Backbone.Base
     @viewHandler.show name, data
 
   handleTasksLoaded: ->
-    @showView "nowList"
+    @showView "taskList", { state: "now" }
 
 $ -> window.app = new Application()

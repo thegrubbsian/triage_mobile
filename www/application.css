@@ -1712,30 +1712,30 @@ ul.segmented-controller li a span.label {
 }
 
 /* line 102, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list .content, #later-list .content, #done-list .content, #archived-list .content {
+#task-list .content {
   top: 88px;
   padding-bottom: 40px;
 }
 /* line 109, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list ul.list li, #later-list ul.list li, #done-list ul.list li, #archived-list ul.list li {
+#task-list ul.list li {
   overflow: hidden;
   position: relative;
   background-color: #fff;
 }
 /* line 114, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list ul.list li.ui-sortable-helper, #later-list ul.list li.ui-sortable-helper, #done-list ul.list li.ui-sortable-helper, #archived-list ul.list li.ui-sortable-helper {
+#task-list ul.list li.ui-sortable-helper {
   box-shadow: 0 0 6px #d9d9d9;
   background-color: #fafafa;
 }
 /* line 119, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list ul.list li span.order, #later-list ul.list li span.order, #done-list ul.list li span.order, #archived-list ul.list li span.order {
+#task-list ul.list li span.order {
   float: left;
   font-size: 1.5em;
   color: #bfbfbf;
   margin-right: 0.25em;
 }
 /* line 126, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list ul.list li span.name, #later-list ul.list li span.name, #done-list ul.list li span.name, #archived-list ul.list li span.name {
+#task-list ul.list li span.name {
   float: left;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -1743,7 +1743,7 @@ ul.segmented-controller li a span.label {
   width: 85%;
 }
 /* line 134, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#now-list ul.list li span.arrow, #later-list ul.list li span.arrow, #done-list ul.list li span.arrow, #archived-list ul.list li span.arrow {
+#task-list ul.list li span.arrow {
   position: absolute;
   top: 50%;
   margin-top: -0.5em;
