@@ -19,7 +19,7 @@ class Views.PageView extends Backbone.View
 
   release: ->
     @fadeOut()
-    setTimeout @releaseComplete, 300
+    setTimeout (=> @releaseComplete()), 300
 
   releaseComplete: ->
     @$el.empty()

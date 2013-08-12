@@ -18361,30 +18361,34 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Tasks.prototype.url = config.url("/tasks");
 
-    Tasks.prototype.eachInState = function(state, func) {
-      var models;
-      models = this.where({
+    Tasks.prototype.tasksInState = function(state) {
+      return this.where({
         state: state
       });
-      return _(models).each(func);
+    };
+
+    Tasks.prototype.eachInState = function(state, func) {
+      return _(this.tasksInState(state)).each(func);
     };
 
     Tasks.prototype.updateSortOrder = function(taskId, taskBeforeId, taskAfterId) {
       var afterIdx, afterTask, beforeIdx, beforeTask, newIdx, task;
+      task = this.get(taskId);
       beforeTask = this.get(taskBeforeId);
-      beforeIdx = (beforeTask && beforeTask.get("order_index")) || (this.maxOrder() + 1.00);
+      beforeIdx = (beforeTask && beforeTask.get("order_index")) || (this.maxOrderInState(task.get("state")) + 1.00);
       afterTask = this.get(taskAfterId);
       afterIdx = (afterTask && afterTask.get("order_index")) || 0.00;
-      task = this.get(taskId);
       newIdx = (afterIdx + beforeIdx) / 2;
       task.set("order_index", newIdx);
       return task.save();
     };
 
-    Tasks.prototype.maxOrder = function() {
-      return this.max(function(task) {
+    Tasks.prototype.maxOrderInState = function(state) {
+      var maxTask;
+      maxTask = _(this.tasksInState(state)).max(function(task) {
         return task.get("order_index");
       });
+      return (maxTask && maxTask.get("order_index")) || 0;
     };
 
     return Tasks;
@@ -18531,8 +18535,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     PageView.prototype.release = function() {
+      var _this = this;
       this.fadeOut();
-      return setTimeout(this.releaseComplete, 300);
+      return setTimeout((function() {
+        return _this.releaseComplete();
+      }), 300);
     };
 
     PageView.prototype.releaseComplete = function() {

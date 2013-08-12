@@ -4,20 +4,24 @@ class Collections.Tasks extends Backbone.Collection
 
   url: config.url("/tasks")
 
+  tasksInState: (state) ->
+    @where(state: state)
+
   eachInState: (state, func) ->
-    models = @where(state: state)
-    _(models).each func
+    _(@tasksInState(state)).each func
 
   updateSortOrder: (taskId, taskBeforeId, taskAfterId) ->
+    task = @get(taskId)
     beforeTask = @get(taskBeforeId)
-    beforeIdx = (beforeTask && beforeTask.get("order_index")) || (@maxOrder() + 1.00)
+    beforeIdx = (beforeTask && beforeTask.get("order_index")) ||
+      (@maxOrderInState(task.get("state")) + 1.00)
     afterTask = @get(taskAfterId)
     afterIdx = (afterTask && afterTask.get("order_index")) || 0.00
-    task = @get(taskId)
     newIdx = (afterIdx + beforeIdx) / 2
     task.set("order_index", newIdx)
     task.save()
 
-  maxOrder: ->
-    @max (task) ->
+  maxOrderInState: (state) ->
+    maxTask = _(@tasksInState(state)).max (task) ->
       task.get("order_index")
+    (maxTask && maxTask.get("order_index")) || 0

@@ -1691,13 +1691,18 @@ ul.segmented-controller li a span.label {
   background-color: #fff;
 }
 /* line 81, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+#now-list ul.list li.ui-sortable-helper, #later-list ul.list li.ui-sortable-helper, #done-list ul.list li.ui-sortable-helper, #archived-list ul.list li.ui-sortable-helper {
+  box-shadow: 0 0 6px #d9d9d9;
+  background-color: #fafafa;
+}
+/* line 86, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #now-list ul.list li span.order, #later-list ul.list li span.order, #done-list ul.list li span.order, #archived-list ul.list li span.order {
   float: left;
   font-size: 1.5em;
   color: #bfbfbf;
   margin-right: 0.25em;
 }
-/* line 88, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 93, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #now-list ul.list li span.name, #later-list ul.list li span.name, #done-list ul.list li span.name, #archived-list ul.list li span.name {
   float: left;
   text-overflow: ellipsis;
@@ -1705,7 +1710,7 @@ ul.segmented-controller li a span.label {
   white-space: nowrap;
   width: 85%;
 }
-/* line 96, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 101, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #now-list ul.list li span.arrow, #later-list ul.list li span.arrow, #done-list ul.list li span.arrow, #archived-list ul.list li span.arrow {
   position: absolute;
   top: 50%;
@@ -1715,28 +1720,28 @@ ul.segmented-controller li a span.label {
   color: #bfbfbf;
 }
 
-/* line 110, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 115, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .bar-standard {
   top: 44px;
 }
-/* line 114, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 119, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .content {
   top: 88px;
 }
-/* line 118, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 123, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail textarea {
   height: 10em;
 }
-/* line 122, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 127, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group {
   overflow: hidden;
 }
-/* line 125, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 130, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group a.button {
   float: left;
   width: 40%;
 }
-/* line 129, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 134, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group a.button:last-child {
   float: right;
 }
