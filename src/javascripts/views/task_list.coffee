@@ -1,5 +1,8 @@
 class Views.TaskList extends Views.PageView
 
+  events:
+    "change #new-task-field": "handleNewTask"
+
   initialize: ->
     @app = @options.app
     @state = @options.state
@@ -19,11 +22,16 @@ class Views.TaskList extends Views.PageView
     @$list.sortable
       axis: "y"
       handle: "span.order"
-      update: (e, ui) => @handleSortUpdate(e, ui)
+      update: @handleSortUpdate
 
-  handleSortUpdate: (e, ui) ->
+  handleSortUpdate: (e, ui) =>
     $item = $(ui.item)
     taskId = $item.data("id")
     taskBeforeId = ($item.prev().length > 0) && $item.prev().data("id")
     taskAfterId = ($item.next().length > 0) && $item.next().data("id")
     @collection.updateSortOrder(taskId, taskBeforeId, taskAfterId)
+
+  handleNewTask: (e) ->
+    $el = $(e.target)
+    task = @app.tasks.create(name: $el.val())
+    @app.showView "taskDetail", { model: task }

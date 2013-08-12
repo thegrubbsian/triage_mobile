@@ -30,6 +30,5 @@ class App.ViewHandler extends Backbone.Base
     @history.push
       name: name
       data: data
-
     @get(name).show data, false
     @trigger "changingView", @current().name

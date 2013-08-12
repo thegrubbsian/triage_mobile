@@ -4,8 +4,11 @@ class Collections.Tasks extends Backbone.Collection
 
   url: config.url("/tasks")
 
+  comparator: (task) ->
+    task.get("order_index") * -1
+
   tasksInState: (state) ->
-    @where(state: state)
+    @sort().where(state: state)
 
   eachInState: (state, func) ->
     _(@tasksInState(state)).each func

@@ -1,4 +1,4 @@
-<%= Templates["_header"]({ showBackButton: true }) %>
+<%= Templates._header({ showBackButton: true }) %>
 <nav class="bar-standard">
   <h3>Edit Task</h3>
 </nav>
@@ -17,15 +17,24 @@
         </div>
       </div>
       <textarea name="description" placeholder="Notes"><%= task.get("description") %></textarea>
-      <ul class="segmented-controller">
-        <li class="active">
-          <a class="now">Now</a>
+      <ul id="state-selector" class="segmented-controller">
+        <li class="<%= task.get("state") == "now" ? "active" : "" %>">
+          <a data-state="now">
+            Now
+            <input type="radio" name="state" value="now" <%= task.get("state") == "now" ? "checked" : "" %> />
+          </a>
         </li>
-        <li>
-          <a class="later">Later</a>
+        <li class="<%= task.get("state") == "later" ? "active" : "" %>">
+          <a data-state="later">
+            Later
+            <input type="radio" name="state" value="later" <%= task.get("state") == "later" ? "checked" : "" %> />
+          </a>
         </li>
-        <li>
-          <a class="done">Done</a>
+        <li class="<%= task.get("state") == "done" ? "active" : "" %>">
+          <a data-state="done">
+            Done
+            <input type="radio" name="state" value="done" <%= task.get("state") == "done" ? "checked" : "" %> />
+          </a>
         </li>
       </ul>
       <a id="save-button" class="button-main button-block">Save</a>

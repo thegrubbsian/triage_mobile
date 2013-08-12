@@ -1,7 +1,8 @@
 window.Helpers =
+
   formData: (selector) ->
     data = {}
-    els = $("input, textarea, select, datetime, date, time, number", selector)
+    els = $(":input", selector)
     els.each (i, el) ->
       el = $(el)
       name = el.attr("name")
@@ -12,8 +13,7 @@ window.Helpers =
         value = el.val()
       else
         value = el.val()
-      data[name] = value  if value
-
+      data[name] = value if value
     data
 
   currentTimezoneOffset: ->

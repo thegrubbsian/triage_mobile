@@ -7,23 +7,23 @@ class Views.PageView extends Backbone.View
       if autoRender isnt false
         if @render
           @render()
-          @fadeIn()
+          @in()
     else
       if @render
         @render()
-        @fadeIn()
-
-  fadeIn: ->
-    $(".page.in").removeClass "in"
-    @$el.removeClass("out").addClass "in"
+        @in()
 
   release: ->
-    @fadeOut()
-    setTimeout (=> @releaseComplete()), 300
+    @out()
 
-  releaseComplete: ->
+  releaseComplete: =>
     @$el.empty()
+    @$el.attr "class", "page left"
+    @$el.off "webkitTransitionEnd"
 
-  fadeOut: ->
-    $(".page.out").removeClass "out"
-    @$el.addClass "out"
+  in: ->
+    @$el.attr "class", "page transition center"
+
+  out: ->
+    @$el.attr "class", "page transition right"
+    @$el.on "webkitTransitionEnd", @releaseComplete

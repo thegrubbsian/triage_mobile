@@ -61,6 +61,38 @@ ul.segmented-controller {
   margin: 1em;
 }
 
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+
+  &.left {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  &.center {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  &.right {
+    -webkit-transform: translate3d(100%, 0, 0);
+    transform: translate3d(100%, 0, 0);
+  }
+
+  $transitionDuration: 0.3s;
+
+  &.transition {
+    -webkit-transition-duration: $transitionDuration;
+    transition-duration: $transitionDuration;
+  }
+}
+
 #tabs {
   top: 44px;
 }
@@ -69,6 +101,7 @@ ul.segmented-controller {
 
   .content {
     top: 88px;
+    padding-bottom: 40px;
   }
 
   ul.list {
@@ -124,6 +157,10 @@ ul.segmented-controller {
     height: 10em;
   }
 
+  input[type="radio"] {
+    display: none;
+  }
+
   .action-group {
     overflow: hidden;
 
@@ -134,6 +171,18 @@ ul.segmented-controller {
       &:last-child {
         float: right;
       }
+    }
+  }
+}
+
+#new-task {
+
+  form {
+    padding: 0.5em;
+
+    input {
+      height: 2.45em;
+      padding: 0.2em 0.6em;
     }
   }
 }

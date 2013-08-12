@@ -18188,7 +18188,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     formData: function(selector) {
       var data, els;
       data = {};
-      els = $("input, textarea, select, datetime, date, time, number", selector);
+      els = $(":input", selector);
       els.each(function(i, el) {
         var name, value;
         el = $(el);
@@ -18361,8 +18361,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Tasks.prototype.url = config.url("/tasks");
 
+    Tasks.prototype.comparator = function(task) {
+      return task.get("order_index") * -1;
+    };
+
     Tasks.prototype.tasksInState = function(state) {
-      return this.where({
+      return this.sort().where({
         state: state
       });
     };
@@ -18504,6 +18508,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -18511,6 +18516,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(PageView, _super);
 
     function PageView() {
+      this.releaseComplete = __bind(this.releaseComplete, this);
       _ref = PageView.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -18525,37 +18531,34 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         if (autoRender !== false) {
           if (this.render) {
             this.render();
-            return this.fadeIn();
+            return this["in"]();
           }
         }
       } else {
         if (this.render) {
           this.render();
-          return this.fadeIn();
+          return this["in"]();
         }
       }
     };
 
-    PageView.prototype.fadeIn = function() {
-      $(".page.in").removeClass("in");
-      return this.$el.removeClass("out").addClass("in");
-    };
-
     PageView.prototype.release = function() {
-      var _this = this;
-      this.fadeOut();
-      return setTimeout((function() {
-        return _this.releaseComplete();
-      }), 300);
+      return this.out();
     };
 
     PageView.prototype.releaseComplete = function() {
-      return this.$el.empty();
+      this.$el.empty();
+      this.$el.attr("class", "page left");
+      return this.$el.off("webkitTransitionEnd");
     };
 
-    PageView.prototype.fadeOut = function() {
-      $(".page.out").removeClass("out");
-      return this.$el.addClass("out");
+    PageView.prototype["in"] = function() {
+      return this.$el.attr("class", "page transition center");
+    };
+
+    PageView.prototype.out = function() {
+      this.$el.attr("class", "page transition right");
+      return this.$el.on("webkitTransitionEnd", this.releaseComplete);
     };
 
     return PageView;
@@ -18672,6 +18675,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return _ref;
     }
 
+    TaskDetail.prototype.events = {
+      "tap #save-button": "handleSave",
+      "tap #state-selector a": "handleStateSelected"
+    };
+
     TaskDetail.prototype.initialize = function() {
       this.app = this.options.app;
       return this.template = Templates.task_detail;
@@ -18685,6 +18693,27 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return this.$el.html(this.template({
         task: this.model
       }));
+    };
+
+    TaskDetail.prototype.handleSave = function() {
+      var $form, taskAttrs;
+      $form = this.$el.find("form");
+      taskAttrs = Helpers.formData($form);
+      this.model.save(taskAttrs);
+      return this.app.showView("" + (this.model.get("state")) + "List");
+    };
+
+    TaskDetail.prototype.handleStateSelected = function(e) {
+      var $el;
+      this.clearStateSelection();
+      $el = $(e.target);
+      return $el.find("input").attr("checked", "checked");
+    };
+
+    TaskDetail.prototype.clearStateSelection = function() {
+      var $stateSelector;
+      $stateSelector = this.$el.find("#state-selector");
+      return $stateSelector.find("input[type='radio']").removeAttr("checked");
     };
 
     return TaskDetail;
@@ -18734,6 +18763,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -18741,9 +18771,14 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(TaskList, _super);
 
     function TaskList() {
+      this.handleSortUpdate = __bind(this.handleSortUpdate, this);
       _ref = TaskList.__super__.constructor.apply(this, arguments);
       return _ref;
     }
+
+    TaskList.prototype.events = {
+      "change #new-task-field": "handleNewTask"
+    };
 
     TaskList.prototype.initialize = function() {
       this.app = this.options.app;
@@ -18773,13 +18808,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskList.prototype.initSorting = function() {
-      var _this = this;
       return this.$list.sortable({
         axis: "y",
         handle: "span.order",
-        update: function(e, ui) {
-          return _this.handleSortUpdate(e, ui);
-        }
+        update: this.handleSortUpdate
       });
     };
 
@@ -18790,6 +18822,17 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       taskBeforeId = ($item.prev().length > 0) && $item.prev().data("id");
       taskAfterId = ($item.next().length > 0) && $item.next().data("id");
       return this.collection.updateSortOrder(taskId, taskBeforeId, taskAfterId);
+    };
+
+    TaskList.prototype.handleNewTask = function(e) {
+      var $el, task;
+      $el = $(e.target);
+      task = this.app.tasks.create({
+        name: $el.val()
+      });
+      return this.app.showView("taskDetail", {
+        model: task
+      });
     };
 
     return TaskList;
