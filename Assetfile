@@ -1,5 +1,5 @@
 require "./build/jst_filter"
-require "./build/sass_filter"
+require "rake-pipeline-web-filters"
 
 JAVASCRIPTS = [
   "lib/jquery",
@@ -28,26 +28,44 @@ JAVASCRIPTS = [
   "views/task_detail",
   "views/task_item",
   "views/task_list",
-  "app"
+  "application"
 ]
 
-input "src/" do
+output "www"
 
-  output "www/"
+input "src/javascripts" do
+
+  match "**/*.coffee" do
+    puts "[assets/coffee] compiling coffee files"
+    coffee_script
+  end
 
   JAVASCRIPTS.reverse.each do |file|
-    puts "[assets/js] compiling #{file}"
-    match("javascripts/#{file}.js") { concat "application.js" }
+    puts "[assets/js] processing #{file}"
+    match("#{file}.js") { concat "application.js" }
   end
 
-  match "templates/**/*.jst" do
-    puts "[assets] compiling templates"
+end
+
+input "src/stylesheets" do
+
+  match "**/*.scss" do
+    puts "[assets/scss] processing sass"
+    sass
+  end
+
+  match "**/*.css" do
+    puts "[assets/css] concatenating css"
+    concat "application.css"
+  end
+
+end
+
+input "src/templates" do
+
+  match "**/*.jst" do
+    puts "[assets/jst] compiling templates"
     filter JstFilter, "templates.js", "templates"
-  end
-
-  match "stylesheets/application.scss" do
-    puts "[assets] compiling stylesheets"
-    filter SassFilter, "application.css"
   end
 
 end

@@ -14044,16 +14044,6 @@ $.widget("ui.sortable", $.ui.mouse, {
   });
 
 }).call(this);
-(function() {
-
-  // Restore old underscore bindAll behavior
-  _.bindSelf = function(context) {
-    var args = _.functions(context);
-    args.unshift(context);
-    _.bindAll.apply(_, args);
-  };
-
-})();
 // moment.js
 // version : 2.1.0
 // author : Tim Wood
@@ -18140,459 +18130,777 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
   });
 
 }();
-var Views = {};
-var Models = {};
-var Collections = {};
-var Config = function() {
+(function() {
+  var module;
 
-  var environment = "development";
-  var version = "1.0.0";
-
-  var settings = {
-    development: {
-      serverUrl: "http://localhost:3000"
-    },
-    staging: {
-      serverUrl: "http://galrme-staging.herokuapp.com"
-    },
-    production: {
-      serverUrl: "https://galrme-production.herokuapp.com"
-    }
+  module = function(name) {
+    return window[name] = window[name] || {};
   };
 
-  return {
-    setEnv: function(env) { environment = env; },
-    version: function() { return version; },
-    get: function(key) { return settings[environment][key]; },
-    url: function(path) { return settings[environment]["serverUrl"] + path; }
+  module("App");
+
+  module("Models");
+
+  module("Collections");
+
+  module("Views");
+
+}).call(this);
+(function() {
+  var Config;
+
+  Config = function() {
+    var environment, settings, version;
+    environment = "development";
+    version = "1.0.0";
+    settings = {
+      development: {
+        serverUrl: "http://localhost:3000"
+      },
+      staging: {
+        serverUrl: "http://galrme-staging.herokuapp.com"
+      },
+      production: {
+        serverUrl: "https://galrme-production.herokuapp.com"
+      }
+    };
+    return {
+      setEnv: function(env) {
+        return environment = env;
+      },
+      version: function() {
+        return version;
+      },
+      get: function(key) {
+        return settings[environment][key];
+      },
+      url: function(path) {
+        return settings[environment]["serverUrl"] + path;
+      }
+    };
   };
 
-};
+  window.config = new Config();
 
-window.config = new Config();
-var Helpers = {
-
-  formData: function(selector) {
-    var data = {};
-    var els = $("input, textarea, select, datetime, date, time, number", selector);
-    els.each(function(i, el) {
-      var el = $(el);
-      var name = el.attr("name");
-      var value;
-      if (el.is("[type='checkbox']")) {
-        value = el.is(":checked");
-      } else if (el.is("[type='radio']:checked")) {
-        value = el.val();
-      } else {
-        value = el.val();
+}).call(this);
+(function() {
+  window.Helpers = {
+    formData: function(selector) {
+      var data, els;
+      data = {};
+      els = $("input, textarea, select, datetime, date, time, number", selector);
+      els.each(function(i, el) {
+        var name, value;
+        el = $(el);
+        name = el.attr("name");
+        value = void 0;
+        if (el.is("[type='checkbox']")) {
+          value = el.is(":checked");
+        } else if (el.is("[type='radio']:checked")) {
+          value = el.val();
+        } else {
+          value = el.val();
+        }
+        if (value) {
+          return data[name] = value;
+        }
+      });
+      return data;
+    },
+    currentTimezoneOffset: function() {
+      var dstDiff, dstObserved, dstPeriod, i, january, januaryOffset, july, julyOffset, lastEndDay, lastStartDay, offset, period, today, year;
+      dstPeriod = {};
+      lastStartDay = 11;
+      lastEndDay = 4;
+      i = 2012;
+      while (i < 2030) {
+        if (lastStartDay === 8) {
+          lastStartDay = 11;
+        } else {
+          lastStartDay--;
+        }
+        if (lastEndDay === 1) {
+          lastStartDay = 6;
+        } else {
+          lastStartDay--;
+        }
+        dstPeriod[i] = [new Date(i, 2, lastStartDay), new Date(i, 10, lastEndDay)];
+        i++;
       }
-      if (value) { data[name] = value; }
-    });
-    return data;
-  },
-
-  currentTimezoneOffset: function() {
-    var dstPeriod = {}, lastStartDay = 11, lastEndDay = 4;
-    for (var i = 2012; i < 2030; i++) {
-      if (lastStartDay == 8) { lastStartDay = 11; } else { lastStartDay--; }
-      if (lastEndDay == 1) { lastStartDay = 6; } else { lastStartDay--; }
-      dstPeriod[i] = [new Date(i, 2, lastStartDay), new Date(i, 10, lastEndDay)];
-    }
-    var today = new Date();
-    var offset = today.getTimezoneOffset();
-    var year = today.getFullYear();
-    var january = new Date(today.getFullYear(), 0, 1);
-    var januaryOffset = january.getTimezoneOffset();
-    var july = new Date(today.getFullYear(), 6, 1);
-    var julyOffset = july.getTimezoneOffset();
-    var dstObserved = januaryOffset == julyOffset;
-    var dstDiff = Math.abs(januaryOffset - julyOffset);
-    if (dstObserved) {
-      var period = dstPeriod[year];
-      if (today >= period[0] && today < period[1]) {
-        offset += dstDiff;
-      }
-    }
-    return ((offset / 60) * -1);
-  }
-
-};
-Models.User = Backbone.Model.extend({
-
-  name: "User",
-
-  attemptAutoSignIn: function() {
-    var hasLocalRecord = this.fetchLocal("currentUser");
-    if (hasLocalRecord) { this.trigger("userSignedIn"); }
-    return hasLocalRecord;
-  },
-
-  signIn: function(data, options) {
-    var opts = _.extend({ success: function() {}, error: function() {} }, options);
-    var _self = this;
-    $.ajax({
-      type: "POST",
-      url: config.url("/sessions"),
-      data: data,
-      dataType: "json",
-      success: function(response) {
-        _self.set(response);
-        _self.saveLocal("currentUser");
-        _self.trigger("userSignedIn");
-        opts.success();
-      },
-      error: opts.error
-    });
-  },
-
-  signUp: function(data, options) {
-    var opts = _.extend({ success: function() {}, error: function() {} }, options);
-    var _self = this;
-    $.ajax({
-      type: "POST",
-      url: config.url("/users"),
-      data: { user: data },
-      dataType: "json",
-      success: function(response) {
-        _self.set(response);
-        _self.saveLocal("currentUser");
-        _self.trigger("userSignedIn");
-        opts.success();
-      },
-      error: opts.error
-    });
-  }
-
-});
-Models.Task = Backbone.Model.extend({
-
-  name: "Task"
-
-});
-Collections.Tasks = Backbone.Collection.extend({
-
-  model: Models.Task,
-  url: config.url("/tasks"),
-
-  initialize: function() {
-  },
-
-  eachInState: function(state, func) {
-    var models = this.where({ state: state });
-    _(models).each(func);
-  }
-
-});
-var ViewHandler = Backbone.Base.extend({
-
-  views: {},
-  history: [],
-
-  current: function() {
-    if (this.history.length == 0) { return null; }
-    return this.history[this.history.length - 1];
-  },
-
-  register: function(name, view) {
-    this.views[name] = view;
-    this.proxyEvents(view);
-  },
-
-  get: function(name) {
-    return this.views[name];
-  },
-
-  back: function() {
-    if (this.history.length <= 1) { return; }
-    if (this.current()) {
-      var prevView = this.history.pop();
-      this.get(prevView.name).release();
-      this.get(this.current().name).show(this.current().data, true);
-    }
-    this.trigger("changingView", this.current().name);
-  },
-
-  show: function(name, data) {
-    if (typeof data === "undefined") { data = {}; }
-    if (this.current() && this.current().name === name) { return; }
-    if (this.current()) {
-      this.get(this.current().name).release();
-    }
-    this.history.push({ name: name, data: data });
-    this.get(name).show(data, false);
-    this.trigger("changingView", this.current().name);
-  }
-
-});
-Views.Window = Backbone.View.extend({
-
-  events: {
-    "tap header #back-button": "goBack"
-  },
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-  },
-
-  goBack: function() {
-    this.trigger("goBack");
-  }
-
-});
-var PageView = Backbone.View.extend({
-
-  show: function(data, isGoingBack) {
-    if (typeof isGoingBack === "undefined") { isGoingBack = false; }
-    if (this.preRender) {
-      var autoRender = this.preRender(data, isGoingBack);
-      if (autoRender !== false) {
-        if (this.render) {
-          this.render();
-          this.fadeIn();
+      today = new Date();
+      offset = today.getTimezoneOffset();
+      year = today.getFullYear();
+      january = new Date(today.getFullYear(), 0, 1);
+      januaryOffset = january.getTimezoneOffset();
+      july = new Date(today.getFullYear(), 6, 1);
+      julyOffset = july.getTimezoneOffset();
+      dstObserved = januaryOffset === julyOffset;
+      dstDiff = Math.abs(januaryOffset - julyOffset);
+      if (dstObserved) {
+        period = dstPeriod[year];
+        if (today >= period[0] && today < period[1]) {
+          offset += dstDiff;
         }
       }
-    } else {
-      if (this.render) {
-        this.render();
-        this.fadeIn();
-      }
+      return (offset / 60) * -1;
     }
-  },
+  };
 
-  fadeIn: function() {
-    $(".page.in").removeClass("in");
-    this.$el.removeClass("out").addClass("in");
-  },
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  release: function() {
-    this.fadeOut();
-    setTimeout(this.releaseComplete, 300);
-  },
+  Models.User = (function(_super) {
+    __extends(User, _super);
 
-  releaseComplete: function() {
-    this.$el.empty();
-  },
+    function User() {
+      _ref = User.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
 
-  fadeOut: function() {
-    $(".page.out").removeClass("out");
-    this.$el.addClass("out");
-  }
+    User.prototype.name = "User";
 
-});
-Views.SignIn = PageView.extend({
-
-  events: {
-    "tap #sign-in-button": "handleSignIn",
-    "tap #sign-up-link": "handleSignUpLink"
-  },
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-    this.template = Templates["sign_in"];
-  },
-
-  render: function() {
-    this.$el.html(this.template());
-  },
-
-  handleSignIn: function() {
-    var formData = Helpers.formData(this.$el.find("#sign-in-form"));
-    this.app.currentUser.signIn(formData, {
-      error: this.signInFailure
-    });
-  },
-
-  signInFailure: function() {
-    this.$el.find("#sign-in-error-message").show();
-  },
-
-  handleSignUpLink: function() {
-    this.app.showView("signUp");
-  }
-
-});
-Views.SignUp = PageView.extend({
-
-  events: {
-    "tap #sign-up-button": "handleSignUp",
-    "tap #sign-in-link": "handleSignInLink"
-  },
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-    this.template = Templates["sign_up"];
-  },
-
-  render: function() {
-    this.$el.html(this.template());
-  },
-
-  handleSignUp: function() {
-    var formData = Helpers.formData(this.$el.find("#sign-up-form"));
-    this.app.currentUser.signUp(formData, {
-      error: this.signUpFailure
-    });
-  },
-
-  signUpFailure: function() {
-    this.$el.find("#sign-up-error-message").show();
-  },
-
-  handleSignInLink: function() {
-    this.app.showView("signIn");
-  }
-
-});
-Views.TaskDetail = PageView.extend({
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-    this.template = Templates.task_detail;
-  },
-
-  preRender: function(data) {
-    this.model = data.model;
-  },
-
-  render: function() {
-    this.$el.html(this.template({ task: this.model }));
-  }
-
-});
-Views.TaskItem = Backbone.View.extend({
-
-  events: {
-    "tap": "handleTap"
-  },
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-    this.template = Templates.task_item;
-  },
-
-  render: function($list) {
-    this.$el = $(this.template({ task: this.model })).appendTo($list);
-    this.delegateEvents();
-  },
-
-  handleTap: function() {
-    this.app.showView("taskDetail", { model: this.model });
-  }
-
-});
-Views.TaskList = PageView.extend({
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.app = this.options.app;
-    this.state = this.options.state;
-    this.template = Templates.task_list;
-  },
-
-  render: function() {
-    this.$el.html(this.template({ state: this.state }));
-    this.$list = this.$el.find("ul.list");
-    this.collection.eachInState(this.state, this.renderItem);
-    this.initSorting();
-  },
-
-  renderItem: function(task) {
-    var itemView = new Views.TaskItem({ model: task, app: this.app });
-    itemView.render(this.$list);
-  },
-
-  initSorting: function() {
-    this.$list.sortable({ axis: "y", handle: "span.order" });
-  }
-
-});
-var App = Backbone.Base.extend({
-
-  initialize: function() {
-    _.bindSelf(this);
-    this.initGlobalAjaxEvents();
-    this.currentUser = new Models.User();
-    this.tasks = new Collections.Tasks();
-    this.initViews();
-    this.bindEvents();
-    this.authenticateUser();
-  },
-
-  initGlobalAjaxEvents: function() {
-    var _self = this;
-    $(document).ajaxError(function(e, xhr, data) {
-      console.log("ajaxError: " + data.url + ", " + xhr.responseText);
-      if (xhr.status === 403) {
-        console.log("invalid auth_key, signing out");
-        _self.showView("signIn");
-        Store.clear();
+    User.prototype.attemptAutoSignIn = function() {
+      var hasLocalRecord;
+      hasLocalRecord = this.fetchLocal("currentUser");
+      if (hasLocalRecord) {
+        this.trigger("userSignedIn");
       }
-    });
-  },
+      return hasLocalRecord;
+    };
 
-  setupAuthHeader: function() {
-    var authKey = this.currentUser.get("auth_key");
-    $.ajaxSetup({ data: { auth_key: authKey } });
-  },
-
-  bindEvents: function() {
-    this.currentUser.on("userSignedIn", this.handleUserSignIn);
-    this.on("goBack", this.handleBackButton);
-  },
-
-  handleUserSignIn: function() {
-    this.setupAuthHeader();
-    this.tasks.fetch({ success: this.handleTasksLoaded });
-  },
-
-  handleBackButton: function() {
-    this.viewHandler.back();
-  },
-
-  initViews: function() {
-    var _self = this;
-
-    this.viewHandler = new ViewHandler();
-
-    this.windowView = new Views.Window({ el: "body", app: this });
-    this.proxyEvents(this.windowView);
-
-    var signInView = new Views.SignIn({ el: "#sign-in", app: this });
-    this.viewHandler.register("signIn", signInView);
-
-    var signUpView = new Views.SignUp({ el: "#sign-up", app: this });
-    this.viewHandler.register("signUp", signUpView);
-
-    _(["now", "later", "done", "archived"]).each(function(state) {
-      var listView = new Views.TaskList({
-        el: "#" + state + "-list", app: _self, collection: _self.tasks, state: state
+    User.prototype.signIn = function(data, options) {
+      var _this = this;
+      return $.ajax({
+        type: "POST",
+        url: config.url("/sessions"),
+        data: data,
+        dataType: "json",
+        success: function(response) {
+          _this.set(response);
+          _this.saveLocal("currentUser");
+          _this.trigger("userSignedIn");
+          if (options.success) {
+            return options.success();
+          }
+        },
+        error: function() {
+          if (options.error) {
+            return options.error();
+          }
+        }
       });
-      _self.viewHandler.register(state + "List", listView);
-    });
+    };
 
-    var taskDetailView = new Views.TaskDetail({ el: "#task-detail", app: this });
-    this.viewHandler.register("taskDetail", taskDetailView);
-  },
+    User.prototype.signUp = function(data, options) {
+      var _this = this;
+      return $.ajax({
+        type: "POST",
+        url: config.url("/users"),
+        data: {
+          user: data
+        },
+        dataType: "json",
+        success: function(response) {
+          _this.set(response);
+          _this.saveLocal("currentUser");
+          _this.trigger("userSignedIn");
+          if (options.success) {
+            return opts.success();
+          }
+        },
+        error: function() {
+          if (options.error) {
+            return options.error();
+          }
+        }
+      });
+    };
 
-  authenticateUser: function() {
-    if (!this.currentUser.attemptAutoSignIn()) {
-      this.showView("signIn");
+    return User;
+
+  })(Backbone.Model);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Models.Task = (function(_super) {
+    __extends(Task, _super);
+
+    function Task() {
+      _ref = Task.__super__.constructor.apply(this, arguments);
+      return _ref;
     }
-  },
 
-  showView: function(name, data) {
-    this.viewHandler.show(name, data);
-  },
+    Task.prototype.name = "Task";
 
-  handleTasksLoaded: function() {
-    this.showView("nowList");
-  }
+    return Task;
 
-});
+  })(Backbone.Model);
 
-$(function() { window.app = new App(); });
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Collections.Tasks = (function(_super) {
+    __extends(Tasks, _super);
+
+    function Tasks() {
+      _ref = Tasks.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    Tasks.prototype.model = Models.Task;
+
+    Tasks.prototype.url = config.url("/tasks");
+
+    Tasks.prototype.eachInState = function(state, func) {
+      var models;
+      models = this.where({
+        state: state
+      });
+      return _(models).each(func);
+    };
+
+    Tasks.prototype.updateSortOrder = function(taskId, taskBeforeId, taskAfterId) {
+      var afterIdx, afterTask, beforeIdx, beforeTask, newIdx, task;
+      beforeTask = this.get(taskBeforeId);
+      beforeIdx = (beforeTask && beforeTask.get("order_index")) || (this.maxOrder() + 1.00);
+      afterTask = this.get(taskAfterId);
+      afterIdx = (afterTask && afterTask.get("order_index")) || 0.00;
+      task = this.get(taskId);
+      newIdx = (afterIdx + beforeIdx) / 2;
+      task.set("order_index", newIdx);
+      return task.save();
+    };
+
+    Tasks.prototype.maxOrder = function() {
+      return this.max(function(task) {
+        return task.get("order_index");
+      });
+    };
+
+    return Tasks;
+
+  })(Backbone.Collection);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  App.ViewHandler = (function(_super) {
+    __extends(ViewHandler, _super);
+
+    function ViewHandler() {
+      _ref = ViewHandler.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    ViewHandler.prototype.views = {};
+
+    ViewHandler.prototype.history = [];
+
+    ViewHandler.prototype.current = function() {
+      if (this.history.length === 0) {
+        return null;
+      }
+      return this.history[this.history.length - 1];
+    };
+
+    ViewHandler.prototype.register = function(name, view) {
+      this.views[name] = view;
+      return this.proxyEvents(view);
+    };
+
+    ViewHandler.prototype.get = function(name) {
+      return this.views[name];
+    };
+
+    ViewHandler.prototype.back = function() {
+      var prevView;
+      if (this.history.length <= 1) {
+        return;
+      }
+      if (this.current()) {
+        prevView = this.history.pop();
+        this.get(prevView.name).release();
+        this.get(this.current().name).show(this.current().data, true);
+      }
+      return this.trigger("changingView", this.current().name);
+    };
+
+    ViewHandler.prototype.show = function(name, data) {
+      if (typeof data === "undefined") {
+        data = {};
+      }
+      if (this.current() && this.current().name === name) {
+        return;
+      }
+      if (this.current()) {
+        this.get(this.current().name).release();
+      }
+      this.history.push({
+        name: name,
+        data: data
+      });
+      this.get(name).show(data, false);
+      return this.trigger("changingView", this.current().name);
+    };
+
+    return ViewHandler;
+
+  })(Backbone.Base);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.Window = (function(_super) {
+    __extends(Window, _super);
+
+    function Window() {
+      _ref = Window.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    Window.prototype.events = {
+      "tap header #back-button": "goBack"
+    };
+
+    Window.prototype.initialize = function() {
+      return this.app = this.options.app;
+    };
+
+    Window.prototype.goBack = function() {
+      return this.trigger("goBack");
+    };
+
+    return Window;
+
+  })(Backbone.View);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.PageView = (function(_super) {
+    __extends(PageView, _super);
+
+    function PageView() {
+      _ref = PageView.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    PageView.prototype.show = function(data, isGoingBack) {
+      var autoRender;
+      if (typeof isGoingBack === "undefined") {
+        isGoingBack = false;
+      }
+      if (this.preRender) {
+        autoRender = this.preRender(data, isGoingBack);
+        if (autoRender !== false) {
+          if (this.render) {
+            this.render();
+            return this.fadeIn();
+          }
+        }
+      } else {
+        if (this.render) {
+          this.render();
+          return this.fadeIn();
+        }
+      }
+    };
+
+    PageView.prototype.fadeIn = function() {
+      $(".page.in").removeClass("in");
+      return this.$el.removeClass("out").addClass("in");
+    };
+
+    PageView.prototype.release = function() {
+      this.fadeOut();
+      return setTimeout(this.releaseComplete, 300);
+    };
+
+    PageView.prototype.releaseComplete = function() {
+      return this.$el.empty();
+    };
+
+    PageView.prototype.fadeOut = function() {
+      $(".page.out").removeClass("out");
+      return this.$el.addClass("out");
+    };
+
+    return PageView;
+
+  })(Backbone.View);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.SignIn = (function(_super) {
+    __extends(SignIn, _super);
+
+    function SignIn() {
+      _ref = SignIn.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    SignIn.prototype.events = {
+      "tap #sign-in-button": "handleSignIn",
+      "tap #sign-up-link": "handleSignUpLink"
+    };
+
+    SignIn.prototype.initialize = function() {
+      this.app = this.options.app;
+      return this.template = Templates["sign_in"];
+    };
+
+    SignIn.prototype.render = function() {
+      return this.$el.html(this.template());
+    };
+
+    SignIn.prototype.handleSignIn = function() {
+      var formData;
+      formData = Helpers.formData(this.$el.find("#sign-in-form"));
+      return this.app.currentUser.signIn(formData, {
+        error: this.signInFailure
+      });
+    };
+
+    SignIn.prototype.signInFailure = function() {
+      return this.$el.find("#sign-in-error-message").show();
+    };
+
+    SignIn.prototype.handleSignUpLink = function() {
+      return this.app.showView("signUp");
+    };
+
+    return SignIn;
+
+  })(Views.PageView);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.SignUp = (function(_super) {
+    __extends(SignUp, _super);
+
+    function SignUp() {
+      _ref = SignUp.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    SignUp.prototype.events = {
+      "tap #sign-up-button": "handleSignUp",
+      "tap #sign-in-link": "handleSignInLink"
+    };
+
+    SignUp.prototype.initialize = function() {
+      this.app = this.options.app;
+      return this.template = Templates["sign_up"];
+    };
+
+    SignUp.prototype.render = function() {
+      return this.$el.html(this.template());
+    };
+
+    SignUp.prototype.handleSignUp = function() {
+      var formData;
+      formData = Helpers.formData(this.$el.find("#sign-up-form"));
+      return this.app.currentUser.signUp(formData, {
+        error: this.signUpFailure
+      });
+    };
+
+    SignUp.prototype.signUpFailure = function() {
+      return this.$el.find("#sign-up-error-message").show();
+    };
+
+    SignUp.prototype.handleSignInLink = function() {
+      return this.app.showView("signIn");
+    };
+
+    return SignUp;
+
+  })(Views.PageView);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.TaskDetail = (function(_super) {
+    __extends(TaskDetail, _super);
+
+    function TaskDetail() {
+      _ref = TaskDetail.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    TaskDetail.prototype.initialize = function() {
+      this.app = this.options.app;
+      return this.template = Templates.task_detail;
+    };
+
+    TaskDetail.prototype.preRender = function(data) {
+      return this.model = data.model;
+    };
+
+    TaskDetail.prototype.render = function() {
+      return this.$el.html(this.template({
+        task: this.model
+      }));
+    };
+
+    return TaskDetail;
+
+  })(Views.PageView);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.TaskItem = (function(_super) {
+    __extends(TaskItem, _super);
+
+    function TaskItem() {
+      _ref = TaskItem.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    TaskItem.prototype.events = {
+      tap: "handleTap"
+    };
+
+    TaskItem.prototype.initialize = function() {
+      this.app = this.options.app;
+      return this.template = Templates.task_item;
+    };
+
+    TaskItem.prototype.render = function($list) {
+      this.$el = $(this.template({
+        task: this.model
+      })).appendTo($list);
+      return this.delegateEvents();
+    };
+
+    TaskItem.prototype.handleTap = function() {
+      return this.app.showView("taskDetail", {
+        model: this.model
+      });
+    };
+
+    return TaskItem;
+
+  })(Backbone.View);
+
+}).call(this);
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.TaskList = (function(_super) {
+    __extends(TaskList, _super);
+
+    function TaskList() {
+      _ref = TaskList.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    TaskList.prototype.initialize = function() {
+      this.app = this.options.app;
+      this.state = this.options.state;
+      return this.template = Templates.task_list;
+    };
+
+    TaskList.prototype.render = function() {
+      var _this = this;
+      this.$el.html(this.template({
+        state: this.state
+      }));
+      this.$list = this.$el.find("ul.list");
+      this.collection.eachInState(this.state, function(task) {
+        return _this.renderItem(task);
+      });
+      return this.initSorting();
+    };
+
+    TaskList.prototype.renderItem = function(task) {
+      var itemView;
+      itemView = new Views.TaskItem({
+        model: task,
+        app: this.app
+      });
+      return itemView.render(this.$list);
+    };
+
+    TaskList.prototype.initSorting = function() {
+      var _this = this;
+      return this.$list.sortable({
+        axis: "y",
+        handle: "span.order",
+        update: function(e, ui) {
+          return _this.handleSortUpdate(e, ui);
+        }
+      });
+    };
+
+    TaskList.prototype.handleSortUpdate = function(e, ui) {
+      var $item, taskAfterId, taskBeforeId, taskId;
+      $item = $(ui.item);
+      taskId = $item.data("id");
+      taskBeforeId = ($item.prev().length > 0) && $item.prev().data("id");
+      taskAfterId = ($item.next().length > 0) && $item.next().data("id");
+      return this.collection.updateSortOrder(taskId, taskBeforeId, taskAfterId);
+    };
+
+    return TaskList;
+
+  })(Views.PageView);
+
+}).call(this);
+(function() {
+  var Application, _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Application = (function(_super) {
+    __extends(Application, _super);
+
+    function Application() {
+      _ref = Application.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    Application.prototype.initialize = function() {
+      this.initGlobalAjaxEvents();
+      this.currentUser = new Models.User();
+      this.tasks = new Collections.Tasks();
+      this.initViews();
+      this.bindEvents();
+      return this.authenticateUser();
+    };
+
+    Application.prototype.initGlobalAjaxEvents = function() {
+      var _this = this;
+      return $(document).ajaxError(function(e, xhr, data) {
+        console.log("ajaxError: " + data.url + ", " + xhr.responseText);
+        if (xhr.status === 403) {
+          console.log("invalid auth_key, signing out");
+          _this.showView("signIn");
+          return Store.clear();
+        }
+      });
+    };
+
+    Application.prototype.setupAuthHeader = function() {
+      var authKey;
+      authKey = this.currentUser.get("auth_key");
+      return $.ajaxSetup({
+        beforeSend: function(xhr) {
+          return xhr.setRequestHeader("User-Auth-Key", authKey);
+        }
+      });
+    };
+
+    Application.prototype.bindEvents = function() {
+      var _this = this;
+      this.currentUser.on("userSignedIn", function() {
+        return _this.handleUserSignIn();
+      });
+      return this.on("goBack", this.handleBackButton);
+    };
+
+    Application.prototype.handleUserSignIn = function() {
+      var _this = this;
+      this.setupAuthHeader();
+      return this.tasks.fetch({
+        success: function() {
+          return _this.handleTasksLoaded();
+        }
+      });
+    };
+
+    Application.prototype.handleBackButton = function() {
+      return this.viewHandler.back();
+    };
+
+    Application.prototype.initViews = function() {
+      var _this = this;
+      this.viewHandler = new App.ViewHandler();
+      this.windowView = new Views.Window({
+        el: "body",
+        app: this
+      });
+      this.proxyEvents(this.windowView);
+      this.viewHandler.register("signIn", new Views.SignIn({
+        el: "#sign-in",
+        app: this
+      }));
+      this.viewHandler.register("signUp", new Views.SignUp({
+        el: "#sign-up",
+        app: this
+      }));
+      this.viewHandler.register("taskDetail", new Views.TaskDetail({
+        el: "#task-detail",
+        app: this
+      }));
+      return _(["now", "later", "done", "archived"]).each(function(state) {
+        var listView;
+        listView = new Views.TaskList({
+          el: "#" + state + "-list",
+          app: _this,
+          collection: _this.tasks,
+          state: state
+        });
+        return _this.viewHandler.register(state + "List", listView);
+      });
+    };
+
+    Application.prototype.authenticateUser = function() {
+      if (!this.currentUser.attemptAutoSignIn()) {
+        return this.showView("signIn");
+      }
+    };
+
+    Application.prototype.showView = function(name, data) {
+      return this.viewHandler.show(name, data);
+    };
+
+    Application.prototype.handleTasksLoaded = function() {
+      return this.showView("nowList");
+    };
+
+    return Application;
+
+  })(Backbone.Base);
+
+  $(function() {
+    return window.app = new Application();
+  });
+
+}).call(this);
