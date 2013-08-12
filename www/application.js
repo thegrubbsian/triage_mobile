@@ -18479,7 +18479,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     Window.prototype.events = {
-      "tap header #back-button": "goBack"
+      "tap header #back-button": "goBack",
+      "tap #tabs li": "changeTab"
     };
 
     Window.prototype.initialize = function() {
@@ -18488,6 +18489,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Window.prototype.goBack = function() {
       return this.trigger("goBack");
+    };
+
+    Window.prototype.changeTab = function(e) {
+      var state;
+      state = $(e.target).closest("li").data("state");
+      return this.app.showView("" + state + "List");
     };
 
     return Window;
@@ -18884,7 +18891,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
           collection: _this.tasks,
           state: state
         });
-        return _this.viewHandler.register(state + "List", listView);
+        return _this.viewHandler.register("" + state + "List", listView);
       });
     };
 

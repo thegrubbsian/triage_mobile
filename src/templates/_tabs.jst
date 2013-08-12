@@ -1,19 +1,19 @@
 <nav id="tabs" class="bar-standard">
   <ul id="tabs" class="segmented-controller">
-    <li class="<%= selected == "now" ? "active" : "" %>">
-      <a href="#item1">
+    <li data-state="now" class="<%= selected == "now" ? "active" : "" %>">
+      <a>
         <span class="icon-new"></span>
         <span class="label">Now</span>
       </a>
     </li>
-    <li class="<%= selected == "later" ? "active" : "" %>">
-      <a href="#item2">
+    <li data-state="later" class="<%= selected == "later" ? "active" : "" %>">
+      <a>
         <span class="icon-clock"></span>
         <span class="label">Later</span>
       </a>
     </li>
-    <li class="<%= selected == "done" ? "active" : "" %>">
-      <a href="#item3">
+    <li data-state="done" class="<%= selected == "done" ? "active" : "" %>">
+      <a>
         <span class="icon-checkmark"></span>
         <span class="label">Done</span>
       </a>

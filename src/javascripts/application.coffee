@@ -45,9 +45,9 @@ class Application extends Backbone.Base
 
     _(["now", "later", "done", "archived"]).each (state) =>
       listView = new Views.TaskList(
-        el: "#" + state + "-list", app: @, collection: @tasks, state: state
+        el: "##{state}-list", app: @, collection: @tasks, state: state
       )
-      @viewHandler.register state + "List", listView
+      @viewHandler.register "#{state}List", listView
 
   authenticateUser: ->
     @showView "signIn"  unless @currentUser.attemptAutoSignIn()
