@@ -22,26 +22,41 @@ class Application extends Backbone.Base
       beforeSend: (xhr) ->
         xhr.setRequestHeader("User-Auth-Key", authKey)
 
-  bindEvents: ->
-    @currentUser.on "userSignedIn", => @handleUserSignIn()
-    @on "goBack", @handleBackButton
-
-  handleUserSignIn: ->
-    @setupAuthHeader()
-    @tasks.fetch success: => @handleTasksLoaded()
-
-  handleBackButton: ->
-    @viewHandler.back()
-
   initViews: ->
     @viewHandler = new App.ViewHandler()
+
     @windowView = new Views.Window(el: "body", app: this)
     @proxyEvents @windowView
+
     @viewHandler.register "signIn", new Views.SignIn(el: "#sign-in", app: this)
     @viewHandler.register "signUp", new Views.SignUp(el: "#sign-up", app: this)
     @viewHandler.register "taskDetail", new Views.TaskDetail(el: "#task-detail", app: this)
     @viewHandler.register "taskList",
       new Views.TaskList(el: "#task-list", app: @, collection: @tasks)
+
+    @settingsModal = new Views.SettingsModal(el: "#settings-modal")
+    @proxyEvents @settingsModal
+
+  bindEvents: ->
+    @currentUser.on "userSignedIn", => @handleUserSignIn()
+    @on "goBack", @handleGoBack
+    @on "showSettingsModal", @handleShowSettingsModal
+    @on "signOut", @handleSignOut
+
+  handleUserSignIn: ->
+    @setupAuthHeader()
+    @tasks.fetch success: => @handleTasksLoaded()
+
+  handleGoBack: =>
+    @viewHandler.back()
+
+  handleShowSettingsModal: =>
+    @settingsModal.show()
+
+  handleSignOut: =>
+    @currentUser = null
+    Store.clear()
+    @showView "signIn"
 
   authenticateUser: ->
     @showView "signIn"  unless @currentUser.attemptAutoSignIn()

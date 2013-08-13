@@ -18485,15 +18485,20 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     Window.prototype.events = {
-      "tap header #back-button": "goBack"
+      "tap header #back-button": "handleBackButton",
+      "tap header #settings-button": "handleSettingsButton"
     };
 
     Window.prototype.initialize = function() {
       return this.app = this.options.app;
     };
 
-    Window.prototype.goBack = function() {
+    Window.prototype.handleBackButton = function() {
       return this.trigger("goBack");
+    };
+
+    Window.prototype.handleSettingsButton = function() {
+      return this.trigger("showSettingsModal");
     };
 
     return Window;
@@ -18854,7 +18859,53 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
 }).call(this);
 (function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Views.SettingsModal = (function(_super) {
+    __extends(SettingsModal, _super);
+
+    function SettingsModal() {
+      _ref = SettingsModal.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    SettingsModal.prototype.events = {
+      "tap #settings-close-button": "handleCloseButton",
+      "tap #sign-out-button": "handleSignOutButton"
+    };
+
+    SettingsModal.prototype.initialize = function() {
+      return this.template = Templates.settings_modal;
+    };
+
+    SettingsModal.prototype.show = function() {
+      this.$el.html(this.template());
+      return this.$el.addClass("active");
+    };
+
+    SettingsModal.prototype.close = function() {
+      return this.$el.removeClass("active");
+    };
+
+    SettingsModal.prototype.handleCloseButton = function() {
+      return this.close();
+    };
+
+    SettingsModal.prototype.handleSignOutButton = function() {
+      this.trigger("signOut");
+      return this.close();
+    };
+
+    return SettingsModal;
+
+  })(Backbone.View);
+
+}).call(this);
+(function() {
   var Application, _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -18862,6 +18913,9 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(Application, _super);
 
     function Application() {
+      this.handleSignOut = __bind(this.handleSignOut, this);
+      this.handleShowSettingsModal = __bind(this.handleShowSettingsModal, this);
+      this.handleGoBack = __bind(this.handleGoBack, this);
       _ref = Application.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -18897,28 +18951,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       });
     };
 
-    Application.prototype.bindEvents = function() {
-      var _this = this;
-      this.currentUser.on("userSignedIn", function() {
-        return _this.handleUserSignIn();
-      });
-      return this.on("goBack", this.handleBackButton);
-    };
-
-    Application.prototype.handleUserSignIn = function() {
-      var _this = this;
-      this.setupAuthHeader();
-      return this.tasks.fetch({
-        success: function() {
-          return _this.handleTasksLoaded();
-        }
-      });
-    };
-
-    Application.prototype.handleBackButton = function() {
-      return this.viewHandler.back();
-    };
-
     Application.prototype.initViews = function() {
       this.viewHandler = new App.ViewHandler();
       this.windowView = new Views.Window({
@@ -18938,11 +18970,49 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         el: "#task-detail",
         app: this
       }));
-      return this.viewHandler.register("taskList", new Views.TaskList({
+      this.viewHandler.register("taskList", new Views.TaskList({
         el: "#task-list",
         app: this,
         collection: this.tasks
       }));
+      this.settingsModal = new Views.SettingsModal({
+        el: "#settings-modal"
+      });
+      return this.proxyEvents(this.settingsModal);
+    };
+
+    Application.prototype.bindEvents = function() {
+      var _this = this;
+      this.currentUser.on("userSignedIn", function() {
+        return _this.handleUserSignIn();
+      });
+      this.on("goBack", this.handleGoBack);
+      this.on("showSettingsModal", this.handleShowSettingsModal);
+      return this.on("signOut", this.handleSignOut);
+    };
+
+    Application.prototype.handleUserSignIn = function() {
+      var _this = this;
+      this.setupAuthHeader();
+      return this.tasks.fetch({
+        success: function() {
+          return _this.handleTasksLoaded();
+        }
+      });
+    };
+
+    Application.prototype.handleGoBack = function() {
+      return this.viewHandler.back();
+    };
+
+    Application.prototype.handleShowSettingsModal = function() {
+      return this.settingsModal.show();
+    };
+
+    Application.prototype.handleSignOut = function() {
+      this.currentUser = null;
+      Store.clear();
+      return this.showView("signIn");
     };
 
     Application.prototype.authenticateUser = function() {

@@ -28,6 +28,7 @@ JAVASCRIPTS = [
   "views/task_detail",
   "views/task_item",
   "views/task_list",
+  "views/settings_modal",
   "application"
 ]
 
