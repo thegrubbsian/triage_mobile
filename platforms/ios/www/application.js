@@ -18209,6 +18209,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       });
       return data;
     },
+    correctLayoutForKeyboard: function() {},
     currentTimezoneOffset: function() {
       var dstDiff, dstObserved, dstPeriod, i, january, januaryOffset, july, julyOffset, lastEndDay, lastStartDay, offset, period, today, year;
       dstPeriod = {};
