@@ -93,6 +93,45 @@ ul.segmented-controller {
   }
 }
 
+#logo {
+  height: 7em;
+  width: 7em;
+  margin: 4em auto 2em auto;
+  background-color: #1ba7e5;
+  color: #fff;
+  border-radius: 0.75em;
+  position: relative;
+  padding: 0.5em;
+
+  span {
+    display: block;
+    font-size: 2em;
+
+    &.icon {
+      float: right;
+    }
+
+    &.name {
+      position: absolute;
+      bottom: 0.2em;
+    }
+  }
+}
+
+#sign-in {
+
+  h3 {
+    margin-bottom: 0.5em;
+    color: #888;
+  }
+
+  #sign-in-error-message {
+    display: none;
+    color: red;
+    font-style: italic;
+  }
+}
+
 #tabs {
   top: 44px;
 }
