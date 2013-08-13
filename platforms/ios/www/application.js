@@ -18190,16 +18190,18 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       data = {};
       els = $(":input", selector);
       els.each(function(i, el) {
-        var name, value;
-        el = $(el);
-        name = el.attr("name");
+        var $el, name, value;
+        $el = $(el);
+        name = $el.attr("name");
         value = void 0;
-        if (el.is("[type='checkbox']")) {
-          value = el.is(":checked");
-        } else if (el.is("[type='radio']:checked")) {
-          value = el.val();
+        if ($el.is("[type='checkbox']")) {
+          value = $el.is(":checked");
+        } else if ($el.is("[type='radio']")) {
+          if ($el.is(":checked")) {
+            value = $el.val();
+          }
         } else {
-          value = el.val();
+          value = $el.val();
         }
         if (value) {
           return data[name] = value;
@@ -18693,7 +18695,9 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       $form = this.$el.find("form");
       taskAttrs = Helpers.formData($form);
       this.model.save(taskAttrs);
-      return this.app.showView("" + (this.model.get("state")) + "List");
+      return this.app.showView("taskList", {
+        state: this.model.get("state")
+      });
     };
 
     TaskDetail.prototype.handleStateSelected = function(e) {
@@ -18728,7 +18732,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     TaskItem.prototype.events = {
-      tap: "handleTap"
+      "tap": "handleTap"
     };
 
     TaskItem.prototype.initialize = function() {
@@ -18743,7 +18747,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return this.delegateEvents();
     };
 
-    TaskItem.prototype.handleTap = function() {
+    TaskItem.prototype.handleTap = function(e) {
+      e.preventDefault();
       return this.app.showView("taskDetail", {
         model: this.model
       });
@@ -18778,6 +18783,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.app = this.options.app;
       this.state = this.options.state || "now";
       return this.template = Templates.task_list;
+    };
+
+    TaskList.prototype.preRender = function(data) {
+      return this.state = data.state;
     };
 
     TaskList.prototype.render = function() {

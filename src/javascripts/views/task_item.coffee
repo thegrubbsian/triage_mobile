@@ -1,7 +1,7 @@
 class Views.TaskItem extends Backbone.View
 
   events:
-    tap: "handleTap"
+    "tap": "handleTap"
 
   initialize: ->
     @app = @options.app
@@ -11,6 +11,6 @@ class Views.TaskItem extends Backbone.View
     @$el = $(@template(task: @model)).appendTo($list)
     @delegateEvents()
 
-  handleTap: ->
-    @app.showView "taskDetail",
-      model: @model
+  handleTap: (e) ->
+    e.preventDefault()
+    @app.showView "taskDetail", { model: @model }

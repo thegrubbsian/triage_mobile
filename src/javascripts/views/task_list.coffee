@@ -9,6 +9,9 @@ class Views.TaskList extends Views.PageView
     @state = @options.state || "now"
     @template = Templates.task_list
 
+  preRender: (data) ->
+    @state = data.state
+
   render: ->
     @$el.html @template(state: @state)
     @$list = @$el.find("ul.list")

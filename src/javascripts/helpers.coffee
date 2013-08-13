@@ -4,15 +4,16 @@ window.Helpers =
     data = {}
     els = $(":input", selector)
     els.each (i, el) ->
-      el = $(el)
-      name = el.attr("name")
+      $el = $(el)
+      name = $el.attr("name")
       value = undefined
-      if el.is("[type='checkbox']")
-        value = el.is(":checked")
-      else if el.is("[type='radio']:checked")
-        value = el.val()
+      if $el.is("[type='checkbox']")
+        value = $el.is(":checked")
+      else if $el.is("[type='radio']")
+        if $el.is(":checked")
+          value = $el.val()
       else
-        value = el.val()
+        value = $el.val()
       data[name] = value if value
     data
 

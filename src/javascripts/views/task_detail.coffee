@@ -18,13 +18,13 @@ class Views.TaskDetail extends Views.PageView
     $form = @$el.find "form"
     taskAttrs = Helpers.formData $form
     @model.save taskAttrs
-    @app.showView "#{@model.get("state")}List"
+    @app.showView "taskList", { state: @model.get("state") }
 
   handleStateSelected: (e) ->
     @clearStateSelection()
     $el = $(e.target)
-    $el.find("input").attr("checked", "checked")
+    $el.find("input").attr "checked", "checked"
 
   clearStateSelection: ->
     $stateSelector = @$el.find "#state-selector"
-    $stateSelector.find("input[type='radio']").removeAttr("checked")
+    $stateSelector.find("input[type='radio']").removeAttr "checked"
