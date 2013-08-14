@@ -22,6 +22,9 @@ class Application extends Backbone.Base
     $.ajaxSetup
       beforeSend: (xhr) ->
         xhr.setRequestHeader("User-Auth-Key", authKey)
+        xhr.setRequestHeader("App-Platform", config.platform())
+        xhr.setRequestHeader("Api-Version", config.apiVersion)
+        xhr.setRequestHeader("App-Version", config.appVersion)
 
   initFastClick: ->
     FastClick.attach(document.body)
@@ -71,4 +74,6 @@ class Application extends Backbone.Base
   handleTasksLoaded: ->
     setTimeout (=> @showView "taskList", { state: "now" }), 100
 
-$ -> window.app = new Application()
+document.addEventListener("deviceready", (-> window.app = new Application()), false)
+$ ->
+  window.app = new Application() unless window.app

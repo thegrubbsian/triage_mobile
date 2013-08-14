@@ -19373,9 +19373,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
   var Config;
 
   Config = function() {
-    var environment, settings, version;
+    var apiVersion, appVersion, environment, settings;
     environment = "development";
-    version = "1.0.0";
+    appVersion = "1.0.0";
+    apiVersion = "1.0.0";
     settings = {
       development: {
         serverUrl: "http://localhost:3000"
@@ -19399,6 +19400,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       },
       url: function(path) {
         return settings[environment]["serverUrl"] + path;
+      },
+      platform: function() {
+        if (typeof device !== "undefined") {
+          return device.platform;
+        }
+        return "browser";
       }
     };
   };
@@ -20183,7 +20190,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       authKey = this.currentUser.get("auth_key");
       return $.ajaxSetup({
         beforeSend: function(xhr) {
-          return xhr.setRequestHeader("User-Auth-Key", authKey);
+          xhr.setRequestHeader("User-Auth-Key", authKey);
+          xhr.setRequestHeader("App-Platform", config.platform());
+          xhr.setRequestHeader("Api-Version", config.apiVersion);
+          return xhr.setRequestHeader("App-Version", config.appVersion);
         }
       });
     };
@@ -20279,8 +20289,14 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
   })(Backbone.Base);
 
-  $(function() {
+  document.addEventListener("deviceready", (function() {
     return window.app = new Application();
+  }), false);
+
+  $(function() {
+    if (!window.app) {
+      return window.app = new Application();
+    }
   });
 
 }).call(this);
