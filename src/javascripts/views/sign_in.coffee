@@ -16,7 +16,6 @@ class Views.SignIn extends Views.PageView
     @app.currentUser.signIn formData,
       error: @signInFailure
 
-
   signInFailure: ->
     @$el.find("#sign-in-error-message").show()
 

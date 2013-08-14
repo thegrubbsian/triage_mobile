@@ -19988,6 +19988,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.$el = $(this.template({
         task: this.model
       })).appendTo($list);
+      debugger;
       return this.delegateEvents();
     };
 
@@ -20037,7 +20038,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.$el.html(this.template({
         state: this.state
       }));
-      this.$list = this.$el.find("ul.list");
       return this.renderList(this.state);
     };
 
@@ -20051,25 +20051,27 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskList.prototype.renderList = function(state) {
-      var _this = this;
-      this.$list.empty();
+      var $newList,
+        _this = this;
+      $newList = $("<ul class='list'></ul>");
       this.collection.eachInState(this.state, function(task) {
-        return _this.renderItem(task);
+        return _this.renderItem(task, $newList);
       });
+      this.$el.find("ul.list").replaceWith($newList);
       return this.initSorting();
     };
 
-    TaskList.prototype.renderItem = function(task) {
+    TaskList.prototype.renderItem = function(task, $list) {
       var itemView;
       itemView = new Views.TaskItem({
         model: task,
         app: this.app
       });
-      return itemView.render(this.$list);
+      return itemView.render($list);
     };
 
     TaskList.prototype.initSorting = function() {
-      return this.$list.sortable({
+      return this.$el.find("ul.list").sortable({
         axis: "y",
         handle: "span.order",
         update: this.handleSortUpdate
@@ -20292,11 +20294,5 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
   document.addEventListener("deviceready", (function() {
     return window.app = new Application();
   }), false);
-
-  $(function() {
-    if (!window.app) {
-      return window.app = new Application();
-    }
-  });
 
 }).call(this);

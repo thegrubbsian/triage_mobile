@@ -14,7 +14,6 @@ class Views.TaskList extends Views.PageView
 
   render: ->
     @$el.html @template(state: @state)
-    @$list = @$el.find("ul.list")
     @renderList(@state)
 
   changeTab: (e) ->
@@ -25,16 +24,17 @@ class Views.TaskList extends Views.PageView
     @renderList(@state)
 
   renderList: (state) ->
-    @$list.empty()
-    @collection.eachInState @state, (task) => @renderItem(task)
+    $newList = $("<ul class='list'></ul>")
+    @collection.eachInState @state, (task) => @renderItem(task, $newList)
+    @$el.find("ul.list").replaceWith($newList)
     @initSorting()
 
-  renderItem: (task) ->
+  renderItem: (task, $list) ->
     itemView = new Views.TaskItem(model: task, app: @app)
-    itemView.render @$list
+    itemView.render $list
 
   initSorting: ->
-    @$list.sortable
+    @$el.find("ul.list").sortable
       axis: "y"
       handle: "span.order"
       update: @handleSortUpdate

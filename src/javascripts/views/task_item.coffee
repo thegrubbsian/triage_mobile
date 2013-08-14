@@ -9,6 +9,7 @@ class Views.TaskItem extends Backbone.View
 
   render: ($list) ->
     @$el = $(@template(task: @model)).appendTo($list)
+    debugger
     @delegateEvents()
 
   handleTap: (e) ->

@@ -75,5 +75,4 @@ class Application extends Backbone.Base
     setTimeout (=> @showView "taskList", { state: "now" }), 100
 
 document.addEventListener("deviceready", (-> window.app = new Application()), false)
-$ ->
-  window.app = new Application() unless window.app
+#$ -> window.app = new Application()
