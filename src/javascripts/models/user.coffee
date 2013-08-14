@@ -3,9 +3,11 @@ class Models.User extends Backbone.Model
   name: "User"
 
   attemptAutoSignIn: ->
-    hasLocalRecord = @fetchLocal("currentUser")
-    @trigger "userSignedIn"  if hasLocalRecord
-    hasLocalRecord
+    localRecord = Store.get("currentUser")
+    if localRecord
+      @set JSON.parse(localRecord)
+      @trigger "userSignedIn" if localRecord
+    localRecord
 
   signIn: (data, options) ->
     $.ajax
@@ -15,7 +17,7 @@ class Models.User extends Backbone.Model
       dataType: "json"
       success: (response) =>
         @set response
-        @saveLocal "currentUser"
+        Store.set("currentUser", JSON.stringify(@attributes))
         @trigger "userSignedIn"
         options.success() if options.success
       error: => options.error() if options.error
@@ -29,7 +31,7 @@ class Models.User extends Backbone.Model
       dataType: "json"
       success: (response) =>
         @set response
-        @saveLocal "currentUser"
+        Store.set("currentUser", JSON.stringify(@attributes))
         @trigger "userSignedIn"
         opts.success() if options.success
       error: => options.error() if options.error

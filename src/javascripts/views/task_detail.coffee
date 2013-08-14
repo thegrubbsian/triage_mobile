@@ -1,8 +1,8 @@
 class Views.TaskDetail extends Views.PageView
 
   events:
-    "tap #save-button": "handleSave"
-    "tap #state-selector a": "handleStateSelected"
+    "click #save-button": "handleSave"
+    "click #state-selector a": "handleStateSelected"
 
   initialize: ->
     @app = @options.app

@@ -1,8 +1,10 @@
 class Collections.Tasks extends Backbone.Collection
 
   model: Models.Task
-
   url: config.url("/tasks")
+
+  initialize: ->
+    @storage = new Offline.Storage("triage:tasks", @, autoPush: true)
 
   comparator: (task) ->
     task.get("order_index") * -1

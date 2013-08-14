@@ -12798,7 +12798,747 @@ $.widget("ui.sortable", $.ui.mouse, {
     _mouseInit.call(self);
   };
 
-})(jQuery);//     Underscore.js 1.5.1
+})(jQuery);/**
+ * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
+ *
+ * @version 0.6.9
+ * @codingstandard ftlabs-jsv2
+ * @copyright The Financial Times Limited [All Rights Reserved]
+ * @license MIT License (see LICENSE.txt)
+ */
+
+/*jslint browser:true, node:true*/
+/*global define, Event, Node*/
+
+
+/**
+ * Instantiate fast-clicking listeners on the specificed layer.
+ *
+ * @constructor
+ * @param {Element} layer The layer to listen on
+ */
+function FastClick(layer) {
+	'use strict';
+	var oldOnClick, self = this;
+
+
+	/**
+	 * Whether a click is currently being tracked.
+	 *
+	 * @type boolean
+	 */
+	this.trackingClick = false;
+
+
+	/**
+	 * Timestamp for when when click tracking started.
+	 *
+	 * @type number
+	 */
+	this.trackingClickStart = 0;
+
+
+	/**
+	 * The element being tracked for a click.
+	 *
+	 * @type EventTarget
+	 */
+	this.targetElement = null;
+
+
+	/**
+	 * X-coordinate of touch start event.
+	 *
+	 * @type number
+	 */
+	this.touchStartX = 0;
+
+
+	/**
+	 * Y-coordinate of touch start event.
+	 *
+	 * @type number
+	 */
+	this.touchStartY = 0;
+
+
+	/**
+	 * ID of the last touch, retrieved from Touch.identifier.
+	 *
+	 * @type number
+	 */
+	this.lastTouchIdentifier = 0;
+
+
+	/**
+	 * Touchmove boundary, beyond which a click will be cancelled.
+	 *
+	 * @type number
+	 */
+	this.touchBoundary = 10;
+
+
+	/**
+	 * The FastClick layer.
+	 *
+	 * @type Element
+	 */
+	this.layer = layer;
+
+	if (!layer || !layer.nodeType) {
+		throw new TypeError('Layer must be a document node');
+	}
+
+	/** @type function() */
+	this.onClick = function() { return FastClick.prototype.onClick.apply(self, arguments); };
+
+	/** @type function() */
+	this.onMouse = function() { return FastClick.prototype.onMouse.apply(self, arguments); };
+
+	/** @type function() */
+	this.onTouchStart = function() { return FastClick.prototype.onTouchStart.apply(self, arguments); };
+
+	/** @type function() */
+	this.onTouchEnd = function() { return FastClick.prototype.onTouchEnd.apply(self, arguments); };
+
+	/** @type function() */
+	this.onTouchCancel = function() { return FastClick.prototype.onTouchCancel.apply(self, arguments); };
+
+	if (FastClick.notNeeded(layer)) {
+		return;
+	}
+
+	// Set up event handlers as required
+	if (this.deviceIsAndroid) {
+		layer.addEventListener('mouseover', this.onMouse, true);
+		layer.addEventListener('mousedown', this.onMouse, true);
+		layer.addEventListener('mouseup', this.onMouse, true);
+	}
+
+	layer.addEventListener('click', this.onClick, true);
+	layer.addEventListener('touchstart', this.onTouchStart, false);
+	layer.addEventListener('touchend', this.onTouchEnd, false);
+	layer.addEventListener('touchcancel', this.onTouchCancel, false);
+
+	// Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+	// which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
+	// layer when they are cancelled.
+	if (!Event.prototype.stopImmediatePropagation) {
+		layer.removeEventListener = function(type, callback, capture) {
+			var rmv = Node.prototype.removeEventListener;
+			if (type === 'click') {
+				rmv.call(layer, type, callback.hijacked || callback, capture);
+			} else {
+				rmv.call(layer, type, callback, capture);
+			}
+		};
+
+		layer.addEventListener = function(type, callback, capture) {
+			var adv = Node.prototype.addEventListener;
+			if (type === 'click') {
+				adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
+					if (!event.propagationStopped) {
+						callback(event);
+					}
+				}), capture);
+			} else {
+				adv.call(layer, type, callback, capture);
+			}
+		};
+	}
+
+	// If a handler is already declared in the element's onclick attribute, it will be fired before
+	// FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
+	// adding it as listener.
+	if (typeof layer.onclick === 'function') {
+
+		// Android browser on at least 3.2 requires a new reference to the function in layer.onclick
+		// - the old one won't work if passed to addEventListener directly.
+		oldOnClick = layer.onclick;
+		layer.addEventListener('click', function(event) {
+			oldOnClick(event);
+		}, false);
+		layer.onclick = null;
+	}
+}
+
+
+/**
+ * Android requires exceptions.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0;
+
+
+/**
+ * iOS requires exceptions.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
+
+/**
+ * iOS 4 requires an exception for select elements.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOS4 = FastClick.prototype.deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
+
+
+/**
+ * iOS 6.0(+?) requires the target element to be manually derived
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOSWithBadTarget = FastClick.prototype.deviceIsIOS && (/OS ([6-9]|\d{2})_\d/).test(navigator.userAgent);
+
+
+/**
+ * Determine whether a given element requires a native click.
+ *
+ * @param {EventTarget|Element} target Target DOM element
+ * @returns {boolean} Returns true if the element needs a native click
+ */
+FastClick.prototype.needsClick = function(target) {
+	'use strict';
+	switch (target.nodeName.toLowerCase()) {
+
+	// Don't send a synthetic click to disabled inputs (issue #62)
+	case 'button':
+	case 'select':
+	case 'textarea':
+		if (target.disabled) {
+			return true;
+		}
+
+		break;
+	case 'input':
+
+		// File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
+		if ((this.deviceIsIOS && target.type === 'file') || target.disabled) {
+			return true;
+		}
+
+		break;
+	case 'label':
+	case 'video':
+		return true;
+	}
+
+	return (/\bneedsclick\b/).test(target.className);
+};
+
+
+/**
+ * Determine whether a given element requires a call to focus to simulate click into element.
+ *
+ * @param {EventTarget|Element} target Target DOM element
+ * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
+ */
+FastClick.prototype.needsFocus = function(target) {
+	'use strict';
+	switch (target.nodeName.toLowerCase()) {
+	case 'textarea':
+	case 'select':
+		return true;
+	case 'input':
+		switch (target.type) {
+		case 'button':
+		case 'checkbox':
+		case 'file':
+		case 'image':
+		case 'radio':
+		case 'submit':
+			return false;
+		}
+
+		// No point in attempting to focus disabled inputs
+		return !target.disabled && !target.readOnly;
+	default:
+		return (/\bneedsfocus\b/).test(target.className);
+	}
+};
+
+
+/**
+ * Send a click event to the specified element.
+ *
+ * @param {EventTarget|Element} targetElement
+ * @param {Event} event
+ */
+FastClick.prototype.sendClick = function(targetElement, event) {
+	'use strict';
+	var clickEvent, touch;
+
+	// On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
+	if (document.activeElement && document.activeElement !== targetElement) {
+		document.activeElement.blur();
+	}
+
+	touch = event.changedTouches[0];
+
+	// Synthesise a click event, with an extra attribute so it can be tracked
+	clickEvent = document.createEvent('MouseEvents');
+	clickEvent.initMouseEvent('click', true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+	clickEvent.forwardedTouchEvent = true;
+	targetElement.dispatchEvent(clickEvent);
+};
+
+
+/**
+ * @param {EventTarget|Element} targetElement
+ */
+FastClick.prototype.focus = function(targetElement) {
+	'use strict';
+	var length;
+
+	if (this.deviceIsIOS && targetElement.setSelectionRange) {
+		length = targetElement.value.length;
+		targetElement.setSelectionRange(length, length);
+	} else {
+		targetElement.focus();
+	}
+};
+
+
+/**
+ * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
+ *
+ * @param {EventTarget|Element} targetElement
+ */
+FastClick.prototype.updateScrollParent = function(targetElement) {
+	'use strict';
+	var scrollParent, parentElement;
+
+	scrollParent = targetElement.fastClickScrollParent;
+
+	// Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
+	// target element was moved to another parent.
+	if (!scrollParent || !scrollParent.contains(targetElement)) {
+		parentElement = targetElement;
+		do {
+			if (parentElement.scrollHeight > parentElement.offsetHeight) {
+				scrollParent = parentElement;
+				targetElement.fastClickScrollParent = parentElement;
+				break;
+			}
+
+			parentElement = parentElement.parentElement;
+		} while (parentElement);
+	}
+
+	// Always update the scroll top tracker if possible.
+	if (scrollParent) {
+		scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
+	}
+};
+
+
+/**
+ * @param {EventTarget} targetElement
+ * @returns {Element|EventTarget}
+ */
+FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
+	'use strict';
+
+	// On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
+	if (eventTarget.nodeType === Node.TEXT_NODE) {
+		return eventTarget.parentNode;
+	}
+
+	return eventTarget;
+};
+
+
+/**
+ * On touch start, record the position and scroll offset.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onTouchStart = function(event) {
+	'use strict';
+	var targetElement, touch, selection;
+
+	// Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
+	if (event.targetTouches.length > 1) {
+		return true;
+	}
+
+	targetElement = this.getTargetElementFromEventTarget(event.target);
+	touch = event.targetTouches[0];
+
+	if (this.deviceIsIOS) {
+
+		// Only trusted events will deselect text on iOS (issue #49)
+		selection = window.getSelection();
+		if (selection.rangeCount && !selection.isCollapsed) {
+			return true;
+		}
+
+		if (!this.deviceIsIOS4) {
+
+			// Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
+			// when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
+			// with the same identifier as the touch event that previously triggered the click that triggered the alert.
+			// Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
+			// immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
+			if (touch.identifier === this.lastTouchIdentifier) {
+				event.preventDefault();
+				return false;
+			}
+
+			this.lastTouchIdentifier = touch.identifier;
+
+			// If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
+			// 1) the user does a fling scroll on the scrollable layer
+			// 2) the user stops the fling scroll with another tap
+			// then the event.target of the last 'touchend' event will be the element that was under the user's finger
+			// when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
+			// is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
+			this.updateScrollParent(targetElement);
+		}
+	}
+
+	this.trackingClick = true;
+	this.trackingClickStart = event.timeStamp;
+	this.targetElement = targetElement;
+
+	this.touchStartX = touch.pageX;
+	this.touchStartY = touch.pageY;
+
+	// Prevent phantom clicks on fast double-tap (issue #36)
+	if ((event.timeStamp - this.lastClickTime) < 200) {
+		event.preventDefault();
+	}
+
+	return true;
+};
+
+
+/**
+ * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.touchHasMoved = function(event) {
+	'use strict';
+	var touch = event.changedTouches[0], boundary = this.touchBoundary;
+
+	if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
+		return true;
+	}
+
+	return false;
+};
+
+
+/**
+ * Attempt to find the labelled control for the given label element.
+ *
+ * @param {EventTarget|HTMLLabelElement} labelElement
+ * @returns {Element|null}
+ */
+FastClick.prototype.findControl = function(labelElement) {
+	'use strict';
+
+	// Fast path for newer browsers supporting the HTML5 control attribute
+	if (labelElement.control !== undefined) {
+		return labelElement.control;
+	}
+
+	// All browsers under test that support touch events also support the HTML5 htmlFor attribute
+	if (labelElement.htmlFor) {
+		return document.getElementById(labelElement.htmlFor);
+	}
+
+	// If no for attribute exists, attempt to retrieve the first labellable descendant element
+	// the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
+	return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
+};
+
+
+/**
+ * On touch end, determine whether to send a click event at once.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onTouchEnd = function(event) {
+	'use strict';
+	var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
+
+	// If the touch has moved, cancel the click tracking
+	if (this.touchHasMoved(event)) {
+		this.trackingClick = false;
+		this.targetElement = null;
+	}
+
+	if (!this.trackingClick) {
+		return true;
+	}
+
+	// Prevent phantom clicks on fast double-tap (issue #36)
+	if ((event.timeStamp - this.lastClickTime) < 200) {
+		this.cancelNextClick = true;
+		return true;
+	}
+
+	this.lastClickTime = event.timeStamp;
+
+	trackingClickStart = this.trackingClickStart;
+	this.trackingClick = false;
+	this.trackingClickStart = 0;
+
+	// On some iOS devices, the targetElement supplied with the event is invalid if the layer
+	// is performing a transition or scroll, and has to be re-detected manually. Note that
+	// for this to function correctly, it must be called *after* the event target is checked!
+	// See issue #57; also filed as rdar://13048589 .
+	if (this.deviceIsIOSWithBadTarget) {
+		touch = event.changedTouches[0];
+
+		// In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
+		targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
+		targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
+	}
+
+	targetTagName = targetElement.tagName.toLowerCase();
+	if (targetTagName === 'label') {
+		forElement = this.findControl(targetElement);
+		if (forElement) {
+			this.focus(targetElement);
+			if (this.deviceIsAndroid) {
+				return false;
+			}
+
+			targetElement = forElement;
+		}
+	} else if (this.needsFocus(targetElement)) {
+
+		// Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
+		// Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
+		if ((event.timeStamp - trackingClickStart) > 100 || (this.deviceIsIOS && window.top !== window && targetTagName === 'input')) {
+			this.targetElement = null;
+			return false;
+		}
+
+		this.focus(targetElement);
+
+		// Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
+		if (!this.deviceIsIOS4 || targetTagName !== 'select') {
+			this.targetElement = null;
+			event.preventDefault();
+		}
+
+		return false;
+	}
+
+	if (this.deviceIsIOS && !this.deviceIsIOS4) {
+
+		// Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
+		// and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
+		scrollParent = targetElement.fastClickScrollParent;
+		if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
+			return true;
+		}
+	}
+
+	// Prevent the actual click from going though - unless the target node is marked as requiring
+	// real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
+	if (!this.needsClick(targetElement)) {
+		event.preventDefault();
+		this.sendClick(targetElement, event);
+	}
+
+	return false;
+};
+
+
+/**
+ * On touch cancel, stop tracking the click.
+ *
+ * @returns {void}
+ */
+FastClick.prototype.onTouchCancel = function() {
+	'use strict';
+	this.trackingClick = false;
+	this.targetElement = null;
+};
+
+
+/**
+ * Determine mouse events which should be permitted.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onMouse = function(event) {
+	'use strict';
+
+	// If a target element was never set (because a touch event was never fired) allow the event
+	if (!this.targetElement) {
+		return true;
+	}
+
+	if (event.forwardedTouchEvent) {
+		return true;
+	}
+
+	// Programmatically generated events targeting a specific element should be permitted
+	if (!event.cancelable) {
+		return true;
+	}
+
+	// Derive and check the target element to see whether the mouse event needs to be permitted;
+	// unless explicitly enabled, prevent non-touch click events from triggering actions,
+	// to prevent ghost/doubleclicks.
+	if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
+
+		// Prevent any user-added listeners declared on FastClick element from being fired.
+		if (event.stopImmediatePropagation) {
+			event.stopImmediatePropagation();
+		} else {
+
+			// Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+			event.propagationStopped = true;
+		}
+
+		// Cancel the event
+		event.stopPropagation();
+		event.preventDefault();
+
+		return false;
+	}
+
+	// If the mouse event is permitted, return true for the action to go through.
+	return true;
+};
+
+
+/**
+ * On actual clicks, determine whether this is a touch-generated click, a click action occurring
+ * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
+ * an actual click which should be permitted.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onClick = function(event) {
+	'use strict';
+	var permitted;
+
+	// It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
+	if (this.trackingClick) {
+		this.targetElement = null;
+		this.trackingClick = false;
+		return true;
+	}
+
+	// Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
+	if (event.target.type === 'submit' && event.detail === 0) {
+		return true;
+	}
+
+	permitted = this.onMouse(event);
+
+	// Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
+	if (!permitted) {
+		this.targetElement = null;
+	}
+
+	// If clicks are permitted, return true for the action to go through.
+	return permitted;
+};
+
+
+/**
+ * Remove all FastClick's event listeners.
+ *
+ * @returns {void}
+ */
+FastClick.prototype.destroy = function() {
+	'use strict';
+	var layer = this.layer;
+
+	if (this.deviceIsAndroid) {
+		layer.removeEventListener('mouseover', this.onMouse, true);
+		layer.removeEventListener('mousedown', this.onMouse, true);
+		layer.removeEventListener('mouseup', this.onMouse, true);
+	}
+
+	layer.removeEventListener('click', this.onClick, true);
+	layer.removeEventListener('touchstart', this.onTouchStart, false);
+	layer.removeEventListener('touchend', this.onTouchEnd, false);
+	layer.removeEventListener('touchcancel', this.onTouchCancel, false);
+};
+
+
+/**
+ * Check whether FastClick is needed.
+ *
+ * @param {Element} layer The layer to listen on
+ */
+FastClick.notNeeded = function(layer) {
+	'use strict';
+	var metaViewport;
+
+	// Devices that don't support touch don't need FastClick
+	if (typeof window.ontouchstart === 'undefined') {
+		return true;
+	}
+
+	if ((/Chrome\/[0-9]+/).test(navigator.userAgent)) {
+
+		// Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
+		if (FastClick.prototype.deviceIsAndroid) {
+			metaViewport = document.querySelector('meta[name=viewport]');
+			if (metaViewport && metaViewport.content.indexOf('user-scalable=no') !== -1) {
+				return true;
+			}
+
+		// Chrome desktop doesn't need FastClick (issue #15)
+		} else {
+			return true;
+		}
+	}
+
+	// IE10 with -ms-touch-action: none, which disables double-tap-to-zoom (issue #97)
+	if (layer.style.msTouchAction === 'none') {
+		return true;
+	}
+
+	return false;
+};
+
+
+/**
+ * Factory method for creating a FastClick object
+ *
+ * @param {Element} layer The layer to listen on
+ */
+FastClick.attach = function(layer) {
+	'use strict';
+	return new FastClick(layer);
+};
+
+
+if (typeof define !== 'undefined' && define.amd) {
+
+	// AMD. Register as an anonymous module.
+	define(function() {
+		'use strict';
+		return FastClick;
+	});
+} else if (typeof module !== 'undefined' && module.exports) {
+	module.exports = FastClick.attach;
+	module.exports.FastClick = FastClick;
+} else {
+	window.FastClick = FastClick;
+};
+//     Underscore.js 1.5.1
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
@@ -17277,6 +18017,512 @@ $.widget("ui.sortable", $.ui.mouse, {
   };
 
 }).call(this);
+(function() {
+  (function(global, _, Backbone) {
+    global.Offline = {
+      VERSION: '0.5.0',
+      localSync: function(method, model, options, store) {
+        var resp, _ref;
+        resp = (function() {
+          switch (method) {
+            case 'read':
+              if (_.isUndefined(model.id)) {
+                return store.findAll(options);
+              } else {
+                return store.find(model, options);
+              }
+              break;
+            case 'create':
+              return store.create(model, options);
+            case 'update':
+              return store.update(model, options);
+            case 'delete':
+              return store.destroy(model, options);
+          }
+        })();
+        if (resp) {
+          return options.success((_ref = resp.attributes) != null ? _ref : resp, options);
+        } else {
+          return typeof options.error === "function" ? options.error('Record not found') : void 0;
+        }
+      },
+      sync: function(method, model, options) {
+        var store, _ref;
+        store = model.storage || ((_ref = model.collection) != null ? _ref.storage : void 0);
+        if (store && (store != null ? store.support : void 0)) {
+          return Offline.localSync(method, model, options, store);
+        } else {
+          return Backbone.ajaxSync(method, model, options);
+        }
+      },
+      onLine: function() {
+        return navigator.onLine !== false;
+      }
+    };
+    Backbone.ajaxSync = Backbone.sync;
+    Backbone.sync = Offline.sync;
+    Offline.Storage = (function() {
+      function Storage(name, collection, options) {
+        this.name = name;
+        this.collection = collection;
+        if (options == null) {
+          options = {};
+        }
+        this.support = this.isLocalStorageSupport();
+        this.allIds = new Offline.Index(this.name, this);
+        this.destroyIds = new Offline.Index("" + this.name + "-destroy", this);
+        this.sync = new Offline.Sync(this.collection, this);
+        this.keys = options.keys || {};
+        this.autoPush = options.autoPush || false;
+      }
+
+      Storage.prototype.isLocalStorageSupport = function() {
+        var e;
+        try {
+          localStorage.setItem('isLocalStorageSupport', '1');
+          localStorage.removeItem('isLocalStorageSupport');
+          return true;
+        } catch (_error) {
+          e = _error;
+          return false;
+        }
+      };
+
+      Storage.prototype.setItem = function(key, value) {
+        var e;
+        try {
+          return localStorage.setItem(key, value);
+        } catch (_error) {
+          e = _error;
+          if (e.name === 'QUOTA_EXCEEDED_ERR') {
+            return this.collection.trigger('quota_exceed');
+          } else {
+            return this.support = false;
+          }
+        }
+      };
+
+      Storage.prototype.removeItem = function(key) {
+        return localStorage.removeItem(key);
+      };
+
+      Storage.prototype.getItem = function(key) {
+        return localStorage.getItem(key);
+      };
+
+      Storage.prototype.create = function(model, options) {
+        if (options == null) {
+          options = {};
+        }
+        options.regenerateId = true;
+        return this.save(model, options);
+      };
+
+      Storage.prototype.update = function(model, options) {
+        if (options == null) {
+          options = {};
+        }
+        return this.save(model, options);
+      };
+
+      Storage.prototype.destroy = function(model, options) {
+        var sid;
+        if (options == null) {
+          options = {};
+        }
+        if (!(options.local || (sid = model.get('sid')) === 'new')) {
+          this.destroyIds.add(sid);
+        }
+        return this.remove(model, options);
+      };
+
+      Storage.prototype.find = function(model, options) {
+        if (options == null) {
+          options = {};
+        }
+        return JSON.parse(this.getItem("" + this.name + "-" + model.id));
+      };
+
+      Storage.prototype.findAll = function(options) {
+        var id, _i, _len, _ref, _results;
+        if (options == null) {
+          options = {};
+        }
+        if (!options.local) {
+          if (this.isEmpty()) {
+            this.sync.full(options);
+          } else {
+            this.sync.incremental(options);
+          }
+        }
+        _ref = this.allIds.values;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          id = _ref[_i];
+          _results.push(JSON.parse(this.getItem("" + this.name + "-" + id)));
+        }
+        return _results;
+      };
+
+      Storage.prototype.s4 = function() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+      };
+
+      Storage.prototype.incrementId = 0x1000000;
+
+      Storage.prototype.localId1 = ((1 + Math.random()) * 0x100000 | 0).toString(16).substring(1);
+
+      Storage.prototype.localId2 = ((1 + Math.random()) * 0x100000 | 0).toString(16).substring(1);
+
+      Storage.prototype.mid = function() {
+        return ((new Date).getTime() / 1000 | 0).toString(16) + this.localId1 + this.localId2 + (++this.incrementId).toString(16).substring(1);
+      };
+
+      Storage.prototype.guid = function() {
+        return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4();
+      };
+
+      Storage.prototype.save = function(item, options) {
+        var newId, _ref, _ref1;
+        if (options == null) {
+          options = {};
+        }
+        if (options.regenerateId) {
+          newId = options.id === 'mid' ? this.mid() : this.guid();
+          item.set({
+            sid: ((_ref = item.attributes) != null ? _ref.sid : void 0) || ((_ref1 = item.attributes) != null ? _ref1.id : void 0) || 'new',
+            id: newId
+          });
+        }
+        if (!options.local) {
+          item.set({
+            updated_at: (new Date()).toJSON(),
+            dirty: true
+          });
+        }
+        this.replaceKeyFields(item, 'local');
+        this.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
+        this.allIds.add(item.id);
+        if (this.autoPush && !options.local) {
+          this.sync.pushItem(item);
+        }
+        return item;
+      };
+
+      Storage.prototype.remove = function(item, options) {
+        var sid;
+        if (options == null) {
+          options = {};
+        }
+        this.removeItem("" + this.name + "-" + item.id);
+        this.allIds.remove(item.id);
+        sid = item.get('sid');
+        if (this.autoPush && sid !== 'new' && !options.local) {
+          this.sync.flushItem(sid);
+        }
+        return item;
+      };
+
+      Storage.prototype.isEmpty = function() {
+        return this.getItem(this.name) === null;
+      };
+
+      Storage.prototype.clear = function() {
+        var collectionKeys, key, keys, record, _i, _j, _len, _len1, _ref, _results,
+          _this = this;
+        keys = Object.keys(localStorage);
+        collectionKeys = _.filter(keys, function(key) {
+          return (new RegExp(_this.name)).test(key);
+        });
+        for (_i = 0, _len = collectionKeys.length; _i < _len; _i++) {
+          key = collectionKeys[_i];
+          this.removeItem(key);
+        }
+        _ref = [this.allIds, this.destroyIds];
+        _results = [];
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          record = _ref[_j];
+          _results.push(record.reset());
+        }
+        return _results;
+      };
+
+      Storage.prototype.replaceKeyFields = function(item, method) {
+        var collection, field, newValue, replacedField, wrapper, _ref, _ref1, _ref2;
+        if (Offline.onLine()) {
+          if (item.attributes) {
+            item = item.attributes;
+          }
+          _ref = this.keys;
+          for (field in _ref) {
+            collection = _ref[field];
+            replacedField = item[field];
+            if (!/^\w{8}-\w{4}-\w{4}/.test(replacedField) || method !== 'local') {
+              newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref1 = wrapper.get(replacedField)) != null ? _ref1.id : void 0) : (_ref2 = collection.get(replacedField)) != null ? _ref2.get('sid') : void 0;
+              if (!_.isUndefined(newValue)) {
+                item[field] = newValue;
+              }
+            }
+          }
+        }
+        return item;
+      };
+
+      return Storage;
+
+    })();
+    Offline.Sync = (function() {
+      function Sync(collection, storage) {
+        this.collection = new Offline.Collection(collection);
+        this.storage = storage;
+      }
+
+      Sync.prototype.ajax = function(method, model, options) {
+        if (Offline.onLine()) {
+          this.prepareOptions(options);
+          return Backbone.ajaxSync(method, model, options);
+        } else {
+          return this.storage.setItem('offline', 'true');
+        }
+      };
+
+      Sync.prototype.full = function(options) {
+        var _this = this;
+        if (options == null) {
+          options = {};
+        }
+        return this.ajax('read', this.collection.items, _.extend({}, options, {
+          success: function(models, opts) {
+            var item, _i, _len;
+            _this.storage.clear();
+            _this.collection.items.reset([], {
+              silent: true
+            });
+            for (_i = 0, _len = models.length; _i < _len; _i++) {
+              item = models[_i];
+              _this.collection.items.create(item, {
+                silent: true,
+                local: true,
+                regenerateId: true
+              });
+            }
+            if (!options.silent) {
+              _this.collection.items.trigger('reset');
+            }
+            if (options.success) {
+              return options.success(models, opts);
+            }
+          }
+        }));
+      };
+
+      Sync.prototype.incremental = function(options) {
+        var _this = this;
+        if (options == null) {
+          options = {};
+        }
+        return this.pull(_.extend({}, options, {
+          success: function() {
+            return _this.push();
+          }
+        }));
+      };
+
+      Sync.prototype.prepareOptions = function(options) {
+        var success,
+          _this = this;
+        if (this.storage.getItem('offline')) {
+          this.storage.removeItem('offline');
+          success = options.success;
+          return options.success = function(model, opts) {
+            success(model, opts);
+            return _this.incremental();
+          };
+        }
+      };
+
+      Sync.prototype.pull = function(options) {
+        var _this = this;
+        if (options == null) {
+          options = {};
+        }
+        return this.ajax('read', this.collection.items, _.extend({}, options, {
+          success: function(models, opts) {
+            var item, _i, _len;
+            _this.collection.destroyDiff(models);
+            for (_i = 0, _len = models.length; _i < _len; _i++) {
+              item = models[_i];
+              _this.pullItem(item);
+            }
+            if (options.success) {
+              return options.success(models, opts);
+            }
+          }
+        }));
+      };
+
+      Sync.prototype.pullItem = function(item) {
+        var local;
+        local = this.collection.get(item.id);
+        if (local) {
+          return this.updateItem(item, local);
+        } else {
+          return this.createItem(item);
+        }
+      };
+
+      Sync.prototype.createItem = function(item) {
+        if (!_.include(this.storage.destroyIds.values, item.id.toString())) {
+          item.sid = item.id;
+          delete item.id;
+          return this.collection.items.create(item, {
+            local: true
+          });
+        }
+      };
+
+      Sync.prototype.updateItem = function(item, model) {
+        if ((new Date(model.get('updated_at'))) < (new Date(item.updated_at))) {
+          delete item.id;
+          return model.save(item, {
+            local: true
+          });
+        }
+      };
+
+      Sync.prototype.push = function() {
+        var item, sid, _i, _j, _len, _len1, _ref, _ref1, _results;
+        _ref = this.collection.dirty();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          this.pushItem(item);
+        }
+        _ref1 = this.storage.destroyIds.values;
+        _results = [];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          sid = _ref1[_j];
+          _results.push(this.flushItem(sid));
+        }
+        return _results;
+      };
+
+      Sync.prototype.pushItem = function(item) {
+        var localId, method, _ref,
+          _this = this;
+        this.storage.replaceKeyFields(item, 'server');
+        localId = item.id;
+        delete item.attributes.id;
+        _ref = item.get('sid') === 'new' ? ['create', null] : ['update', item.attributes.sid], method = _ref[0], item.id = _ref[1];
+        this.ajax(method, item, {
+          success: function(model, opts) {
+            if (method === 'create') {
+              item.set({
+                sid: model.id
+              });
+            }
+            return item.save({
+              dirty: false
+            }, {
+              local: true
+            });
+          }
+        });
+        item.attributes.id = localId;
+        return item.id = localId;
+      };
+
+      Sync.prototype.flushItem = function(sid) {
+        var model,
+          _this = this;
+        model = this.collection.fakeModel(sid);
+        return this.ajax('delete', model, {
+          success: function(model, opts) {
+            return _this.storage.destroyIds.remove(sid);
+          }
+        });
+      };
+
+      return Sync;
+
+    })();
+    Offline.Index = (function() {
+      function Index(name, storage) {
+        var store;
+        this.name = name;
+        this.storage = storage;
+        store = this.storage.getItem(this.name);
+        this.values = (store && store.split(',')) || [];
+      }
+
+      Index.prototype.add = function(itemId) {
+        if (!_.include(this.values, itemId.toString())) {
+          this.values.push(itemId.toString());
+        }
+        return this.save();
+      };
+
+      Index.prototype.remove = function(itemId) {
+        this.values = _.without(this.values, itemId.toString());
+        return this.save();
+      };
+
+      Index.prototype.save = function() {
+        return this.storage.setItem(this.name, this.values.join(','));
+      };
+
+      Index.prototype.reset = function() {
+        this.values = [];
+        return this.storage.removeItem(this.name);
+      };
+
+      return Index;
+
+    })();
+    return Offline.Collection = (function() {
+      function Collection(items) {
+        this.items = items;
+      }
+
+      Collection.prototype.dirty = function() {
+        return this.items.where({
+          dirty: true
+        });
+      };
+
+      Collection.prototype.get = function(sid) {
+        return this.items.find(function(item) {
+          return item.get('sid') === sid;
+        });
+      };
+
+      Collection.prototype.destroyDiff = function(response) {
+        var diff, sid, _i, _len, _ref, _results;
+        diff = _.difference(_.without(this.items.pluck('sid'), 'new'), _.pluck(response, 'id'));
+        _results = [];
+        for (_i = 0, _len = diff.length; _i < _len; _i++) {
+          sid = diff[_i];
+          _results.push((_ref = this.get(sid)) != null ? _ref.destroy({
+            local: true
+          }) : void 0);
+        }
+        return _results;
+      };
+
+      Collection.prototype.fakeModel = function(sid) {
+        var model;
+        model = new Backbone.Model({
+          id: sid
+        });
+        model.urlRoot = this.items.url;
+        return model;
+      };
+
+      return Collection;
+
+    })();
+  })(window, _, Backbone);
+
+}).call(this);
 // A stripped down base class which includes Backbone.Events and some
 // basic constructor sugar.  This should be used for things that don't really
 // fit into one of the other backbone types.
@@ -17304,29 +18550,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
   };
   window.Store = Store;
-
-  Backbone.Model.prototype.saveLocal = function(key) {
-    var id = this.id;
-    if (typeof key !== "undefined") { id = key; }
-    var storageKey = this.name + ":" + id;
-    var attrs = JSON.stringify(this.attributes);
-    Store.set(storageKey, attrs);
-    return storageKey;
-  };
-
-  Backbone.Model.prototype.fetchLocal = function(key) {
-    var id = this.id;
-    if (typeof key !== "undefined") { id = key; }
-    var storageKey = this.name + ":" + id;
-    var attrs = Store.get(storageKey);
-    var foundKey = false;
-    if (attrs) {
-      foundKey = true;
-      this.set(JSON.parse(attrs));
-    }
-    return foundKey;
-  };
-
 
 })();
 (function() {
@@ -18265,12 +19488,15 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     User.prototype.name = "User";
 
     User.prototype.attemptAutoSignIn = function() {
-      var hasLocalRecord;
-      hasLocalRecord = this.fetchLocal("currentUser");
-      if (hasLocalRecord) {
-        this.trigger("userSignedIn");
+      var localRecord;
+      localRecord = Store.get("currentUser");
+      if (localRecord) {
+        this.set(JSON.parse(localRecord));
+        if (localRecord) {
+          this.trigger("userSignedIn");
+        }
       }
-      return hasLocalRecord;
+      return localRecord;
     };
 
     User.prototype.signIn = function(data, options) {
@@ -18282,7 +19508,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         dataType: "json",
         success: function(response) {
           _this.set(response);
-          _this.saveLocal("currentUser");
+          Store.set("currentUser", JSON.stringify(_this.attributes));
           _this.trigger("userSignedIn");
           if (options.success) {
             return options.success();
@@ -18307,7 +19533,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         dataType: "json",
         success: function(response) {
           _this.set(response);
-          _this.saveLocal("currentUser");
+          Store.set("currentUser", JSON.stringify(_this.attributes));
           _this.trigger("userSignedIn");
           if (options.success) {
             return opts.success();
@@ -18362,6 +19588,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     Tasks.prototype.model = Models.Task;
 
     Tasks.prototype.url = config.url("/tasks");
+
+    Tasks.prototype.initialize = function() {
+      return this.storage = new Offline.Storage("triage:tasks", this, {
+        autoPush: true
+      });
+    };
 
     Tasks.prototype.comparator = function(task) {
       return task.get("order_index") * -1;
@@ -18485,8 +19717,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     Window.prototype.events = {
-      "tap header #back-button": "handleBackButton",
-      "tap header #settings-button": "handleSettingsButton"
+      "click header #back-button": "handleBackButton",
+      "click header #settings-button": "handleSettingsButton"
     };
 
     Window.prototype.initialize = function() {
@@ -18580,8 +19812,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     SignIn.prototype.events = {
-      "tap #sign-in-button": "handleSignIn",
-      "tap #sign-up-link": "handleSignUpLink"
+      "click #sign-in-button": "handleSignIn",
+      "click #sign-up-link": "handleSignUpLink"
     };
 
     SignIn.prototype.initialize = function() {
@@ -18628,8 +19860,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     SignUp.prototype.events = {
-      "tap #sign-up-button": "handleSignUp",
-      "tap #sign-in-link": "handleSignInLink"
+      "click #sign-up-button": "handleSignUp",
+      "click #sign-in-link": "handleSignInLink"
     };
 
     SignUp.prototype.initialize = function() {
@@ -18676,8 +19908,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     TaskDetail.prototype.events = {
-      "tap #save-button": "handleSave",
-      "tap #state-selector a": "handleStateSelected"
+      "click #save-button": "handleSave",
+      "click #state-selector a": "handleStateSelected"
     };
 
     TaskDetail.prototype.initialize = function() {
@@ -18737,7 +19969,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     TaskItem.prototype.events = {
-      "tap": "handleTap"
+      "click": "handleTap"
     };
 
     TaskItem.prototype.initialize = function() {
@@ -18781,7 +20013,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     TaskList.prototype.events = {
       "change #new-task-field": "handleNewTask",
-      "tap #tabs li": "changeTab"
+      "click #tabs li": "changeTab"
     };
 
     TaskList.prototype.initialize = function() {
@@ -18803,7 +20035,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskList.prototype.changeTab = function(e) {
-      this.state = $(e.target).closest("li").data("state");
+      var $li;
+      $li = $(e.target).closest("li");
+      this.$el.find("li.active").removeClass("active");
+      $li.addClass("active");
+      this.state = $li.data("state");
       return this.renderList(this.state);
     };
 
@@ -18872,8 +20108,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     SettingsModal.prototype.events = {
-      "tap #settings-close-button": "handleCloseButton",
-      "tap #sign-out-button": "handleSignOutButton"
+      "click #settings-close-button": "handleCloseButton",
+      "click #sign-out-button": "handleSignOutButton"
     };
 
     SettingsModal.prototype.initialize = function() {
@@ -18924,6 +20160,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.initGlobalAjaxEvents();
       this.currentUser = new Models.User();
       this.tasks = new Collections.Tasks();
+      this.initFastClick();
       this.initViews();
       this.bindEvents();
       return this.authenticateUser();
@@ -18949,6 +20186,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
           return xhr.setRequestHeader("User-Auth-Key", authKey);
         }
       });
+    };
+
+    Application.prototype.initFastClick = function() {
+      return FastClick.attach(document.body);
     };
 
     Application.prototype.initViews = function() {
@@ -19026,9 +20267,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.handleTasksLoaded = function() {
-      return this.showView("taskList", {
-        state: "now"
-      });
+      var _this = this;
+      return setTimeout((function() {
+        return _this.showView("taskList", {
+          state: "now"
+        });
+      }), 100);
     };
 
     return Application;

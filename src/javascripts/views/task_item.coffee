@@ -1,7 +1,7 @@
 class Views.TaskItem extends Backbone.View
 
   events:
-    "tap": "handleTap"
+    "click": "handleTap"
 
   initialize: ->
     @app = @options.app

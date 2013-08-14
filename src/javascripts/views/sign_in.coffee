@@ -1,8 +1,8 @@
 class Views.SignIn extends Views.PageView
 
   events:
-    "tap #sign-in-button": "handleSignIn"
-    "tap #sign-up-link": "handleSignUpLink"
+    "click #sign-in-button": "handleSignIn"
+    "click #sign-up-link": "handleSignUpLink"
 
   initialize: ->
     @app = @options.app

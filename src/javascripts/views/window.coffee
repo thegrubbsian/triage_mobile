@@ -1,8 +1,8 @@
 class Views.Window extends Backbone.View
 
   events:
-    "tap header #back-button": "handleBackButton"
-    "tap header #settings-button": "handleSettingsButton"
+    "click header #back-button": "handleBackButton"
+    "click header #settings-button": "handleSettingsButton"
 
   initialize: ->
     @app = @options.app

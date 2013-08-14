@@ -2,7 +2,7 @@ class Views.TaskList extends Views.PageView
 
   events:
     "change #new-task-field": "handleNewTask"
-    "tap #tabs li": "changeTab"
+    "click #tabs li": "changeTab"
 
   initialize: ->
     @app = @options.app
@@ -18,7 +18,10 @@ class Views.TaskList extends Views.PageView
     @renderList(@state)
 
   changeTab: (e) ->
-    @state = $(e.target).closest("li").data("state")
+    $li = $(e.target).closest("li")
+    @$el.find("li.active").removeClass("active")
+    $li.addClass("active")
+    @state = $li.data("state")
     @renderList(@state)
 
   renderList: (state) ->

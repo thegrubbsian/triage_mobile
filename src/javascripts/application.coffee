@@ -4,6 +4,7 @@ class Application extends Backbone.Base
     @initGlobalAjaxEvents()
     @currentUser = new Models.User()
     @tasks = new Collections.Tasks()
+    @initFastClick()
     @initViews()
     @bindEvents()
     @authenticateUser()
@@ -21,6 +22,9 @@ class Application extends Backbone.Base
     $.ajaxSetup
       beforeSend: (xhr) ->
         xhr.setRequestHeader("User-Auth-Key", authKey)
+
+  initFastClick: ->
+    FastClick.attach(document.body)
 
   initViews: ->
     @viewHandler = new App.ViewHandler()
@@ -65,6 +69,6 @@ class Application extends Backbone.Base
     @viewHandler.show name, data
 
   handleTasksLoaded: ->
-    @showView "taskList", { state: "now" }
+    setTimeout (=> @showView "taskList", { state: "now" }), 100
 
 $ -> window.app = new Application()
