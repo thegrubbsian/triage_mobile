@@ -20195,7 +20195,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
           xhr.setRequestHeader("User-Auth-Key", authKey);
           xhr.setRequestHeader("App-Platform", config.platform());
           xhr.setRequestHeader("Api-Version", config.apiVersion);
-          return xhr.setRequestHeader("App-Version", config.appVersion);
+          xhr.setRequestHeader("App-Version", config.appVersion);
+          return xhr.setRequestHeader("User-Timezone-Offset", Helpers.currentTimezoneOffset());
         }
       });
     };
@@ -20291,8 +20292,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
   })(Backbone.Base);
 
-  document.addEventListener("deviceready", (function() {
+  $(function() {
     return window.app = new Application();
-  }), false);
+  });
 
 }).call(this);

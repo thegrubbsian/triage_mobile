@@ -25,6 +25,7 @@ class Application extends Backbone.Base
         xhr.setRequestHeader("App-Platform", config.platform())
         xhr.setRequestHeader("Api-Version", config.apiVersion)
         xhr.setRequestHeader("App-Version", config.appVersion)
+        xhr.setRequestHeader("User-Timezone-Offset", Helpers.currentTimezoneOffset())
 
   initFastClick: ->
     FastClick.attach(document.body)
@@ -74,5 +75,5 @@ class Application extends Backbone.Base
   handleTasksLoaded: ->
     setTimeout (=> @showView "taskList", { state: "now" }), 100
 
-document.addEventListener("deviceready", (-> window.app = new Application()), false)
-#$ -> window.app = new Application()
+#document.addEventListener("deviceready", (-> window.app = new Application()), false)
+$ -> window.app = new Application()
