@@ -13,17 +13,20 @@ class Views.PageView extends Backbone.View
         @render()
         @in()
 
-  release: ->
-    @out()
+  back: ->
+    @out("right")
 
-  releaseComplete: =>
-    @$el.empty()
-    @$el.attr "class", "page left"
-    @$el.off "webkitTransitionEnd"
+  forward: ->
+    @out("left")
 
   in: ->
     @$el.attr "class", "page transition center"
 
-  out: ->
-    @$el.attr "class", "page transition right"
-    @$el.on "webkitTransitionEnd", @releaseComplete
+  out: (direction) ->
+    @$el.attr "class", "page transition #{direction}"
+    @$el.on "webkitTransitionEnd", @transitionComplete
+
+  transitionComplete: =>
+    @$el.empty()
+    @$el.attr "class", "page left"
+    @$el.off "webkitTransitionEnd"

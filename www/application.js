@@ -19681,7 +19681,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       }
       if (this.current()) {
         prevView = this.history.pop();
-        this.get(prevView.name).release();
+        this.get(prevView.name).back();
         this.get(this.current().name).show(this.current().data, true);
       }
       return this.trigger("changingView", this.current().name);
@@ -19695,7 +19695,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         return;
       }
       if (this.current()) {
-        this.get(this.current().name).release();
+        this.get(this.current().name).forward();
       }
       this.history.push({
         name: name,
@@ -19755,7 +19755,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(PageView, _super);
 
     function PageView() {
-      this.releaseComplete = __bind(this.releaseComplete, this);
+      this.transitionComplete = __bind(this.transitionComplete, this);
       _ref = PageView.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -19781,23 +19781,27 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       }
     };
 
-    PageView.prototype.release = function() {
-      return this.out();
+    PageView.prototype.back = function() {
+      return this.out("right");
     };
 
-    PageView.prototype.releaseComplete = function() {
-      this.$el.empty();
-      this.$el.attr("class", "page left");
-      return this.$el.off("webkitTransitionEnd");
+    PageView.prototype.forward = function() {
+      return this.out("left");
     };
 
     PageView.prototype["in"] = function() {
       return this.$el.attr("class", "page transition center");
     };
 
-    PageView.prototype.out = function() {
-      this.$el.attr("class", "page transition right");
-      return this.$el.on("webkitTransitionEnd", this.releaseComplete);
+    PageView.prototype.out = function(direction) {
+      this.$el.attr("class", "page transition " + direction);
+      return this.$el.on("webkitTransitionEnd", this.transitionComplete);
+    };
+
+    PageView.prototype.transitionComplete = function() {
+      this.$el.empty();
+      this.$el.attr("class", "page left");
+      return this.$el.off("webkitTransitionEnd");
     };
 
     return PageView;
@@ -19988,7 +19992,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.$el = $(this.template({
         task: this.model
       })).appendTo($list);
-      debugger;
       return this.delegateEvents();
     };
 

@@ -19,14 +19,14 @@ class App.ViewHandler extends Backbone.Base
     return  if @history.length <= 1
     if @current()
       prevView = @history.pop()
-      @get(prevView.name).release()
+      @get(prevView.name).back()
       @get(@current().name).show @current().data, true
     @trigger "changingView", @current().name
 
   show: (name, data) ->
     data = {}  if typeof data is "undefined"
     return  if @current() and @current().name is name
-    @get(@current().name).release()  if @current()
+    @get(@current().name).forward()  if @current()
     @history.push
       name: name
       data: data
