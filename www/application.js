@@ -19811,6 +19811,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -19818,6 +19819,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(SignIn, _super);
 
     function SignIn() {
+      this.signInFailure = __bind(this.signInFailure, this);
       _ref = SignIn.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -20121,7 +20123,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     SettingsModal.prototype.events = {
       "click #settings-close-button": "handleCloseButton",
-      "click #sign-out-button": "handleSignOutButton"
+      "click #sign-out-button": "handleSignOutButton",
+      "click #refresh-button": "handleRefreshButton"
     };
 
     SettingsModal.prototype.initialize = function() {
@@ -20146,6 +20149,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return this.close();
     };
 
+    SettingsModal.prototype.handleRefreshButton = function() {
+      this.trigger("refreshTasks");
+      return this.close();
+    };
+
     return SettingsModal;
 
   })(Backbone.View);
@@ -20161,6 +20169,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(Application, _super);
 
     function Application() {
+      this.handleRefreshTasks = __bind(this.handleRefreshTasks, this);
       this.handleSignOut = __bind(this.handleSignOut, this);
       this.handleShowSettingsModal = __bind(this.handleShowSettingsModal, this);
       this.handleGoBack = __bind(this.handleGoBack, this);
@@ -20245,17 +20254,13 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       });
       this.on("goBack", this.handleGoBack);
       this.on("showSettingsModal", this.handleShowSettingsModal);
-      return this.on("signOut", this.handleSignOut);
+      this.on("signOut", this.handleSignOut);
+      return this.on("refreshTasks", this.handleRefreshTasks);
     };
 
     Application.prototype.handleUserSignIn = function() {
-      var _this = this;
       this.setupAuthHeader();
-      return this.tasks.fetch({
-        success: function() {
-          return _this.handleTasksLoaded();
-        }
-      });
+      return this.fetchTasks();
     };
 
     Application.prototype.handleGoBack = function() {
@@ -20270,6 +20275,19 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.currentUser = null;
       Store.clear();
       return this.showView("signIn");
+    };
+
+    Application.prototype.handleRefreshTasks = function() {
+      return this.fetchTasks();
+    };
+
+    Application.prototype.fetchTasks = function() {
+      var _this = this;
+      return this.tasks.fetch({
+        success: function() {
+          return _this.handleTasksLoaded();
+        }
+      });
     };
 
     Application.prototype.authenticateUser = function() {

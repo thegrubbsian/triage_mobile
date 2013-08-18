@@ -13,9 +13,7 @@ class Views.SignUp extends Views.PageView
 
   handleSignUp: ->
     formData = Helpers.formData(@$el.find("#sign-up-form"))
-    @app.currentUser.signUp formData,
-      error: @signUpFailure
-
+    @app.currentUser.signUp formData, error: @signUpFailure
 
   signUpFailure: ->
     @$el.find("#sign-up-error-message").show()

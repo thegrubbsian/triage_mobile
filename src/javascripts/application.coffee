@@ -50,10 +50,11 @@ class Application extends Backbone.Base
     @on "goBack", @handleGoBack
     @on "showSettingsModal", @handleShowSettingsModal
     @on "signOut", @handleSignOut
+    @on "refreshTasks", @handleRefreshTasks
 
   handleUserSignIn: ->
     @setupAuthHeader()
-    @tasks.fetch success: => @handleTasksLoaded()
+    @fetchTasks()
 
   handleGoBack: =>
     @viewHandler.back()
@@ -65,6 +66,12 @@ class Application extends Backbone.Base
     @currentUser = null
     Store.clear()
     @showView "signIn"
+
+  handleRefreshTasks: =>
+    @fetchTasks()
+
+  fetchTasks: ->
+    @tasks.fetch success: => @handleTasksLoaded()
 
   authenticateUser: ->
     @showView "signIn"  unless @currentUser.attemptAutoSignIn()

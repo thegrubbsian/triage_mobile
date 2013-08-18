@@ -3,6 +3,7 @@ class Views.SettingsModal extends Backbone.View
   events:
     "click #settings-close-button": "handleCloseButton"
     "click #sign-out-button": "handleSignOutButton"
+    "click #refresh-button": "handleRefreshButton"
 
   initialize: ->
     @template = Templates.settings_modal
@@ -19,4 +20,8 @@ class Views.SettingsModal extends Backbone.View
 
   handleSignOutButton: ->
     @trigger "signOut"
+    @close()
+
+  handleRefreshButton: ->
+    @trigger "refreshTasks"
     @close()
