@@ -19382,10 +19382,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         serverUrl: "http://localhost:3000"
       },
       staging: {
-        serverUrl: "http://galrme-staging.herokuapp.com"
+        serverUrl: "http://triage-app-staging.herokuapp.com"
       },
       production: {
-        serverUrl: "https://galrme-production.herokuapp.com"
+        serverUrl: "https://triage-app-production.herokuapp.com"
       }
     };
     return {
@@ -19841,7 +19841,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     SignIn.prototype.initialize = function() {
       this.app = this.options.app;
-      return this.template = Templates["sign_in"];
+      return this.template = Templates.sign_in;
     };
 
     SignIn.prototype.render = function() {
@@ -19871,6 +19871,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -19878,6 +19879,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(SignUp, _super);
 
     function SignUp() {
+      this.signUpFailure = __bind(this.signUpFailure, this);
       _ref = SignUp.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -19889,7 +19891,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     SignUp.prototype.initialize = function() {
       this.app = this.options.app;
-      return this.template = Templates["sign_up"];
+      return this.template = Templates.sign_up;
     };
 
     SignUp.prototype.render = function() {
@@ -19919,6 +19921,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -19926,13 +19929,15 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(TaskDetail, _super);
 
     function TaskDetail() {
+      this.handleDeleteConfirmation = __bind(this.handleDeleteConfirmation, this);
       _ref = TaskDetail.__super__.constructor.apply(this, arguments);
       return _ref;
     }
 
     TaskDetail.prototype.events = {
       "click #save-button": "handleSave",
-      "click #state-selector a": "handleStateSelected"
+      "click #state-selector a": "handleStateSelected",
+      "click #delete-button": "handleDeleteButton"
     };
 
     TaskDetail.prototype.initialize = function() {
@@ -19955,9 +19960,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       $form = this.$el.find("form");
       taskAttrs = Helpers.formData($form);
       this.model.save(taskAttrs);
-      return this.app.showView("taskList", {
-        state: this.model.get("state")
-      });
+      return this.showTaskList();
     };
 
     TaskDetail.prototype.handleStateSelected = function(e) {
@@ -19971,6 +19974,23 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       var $stateSelector;
       $stateSelector = this.$el.find("#state-selector");
       return $stateSelector.find("input[type='radio']").removeAttr("checked");
+    };
+
+    TaskDetail.prototype.handleDeleteButton = function() {
+      return navigator.notification.confirm("Are you sure you want to delete this task?", this.handleDeleteConfirmation, "Confirm Delete", ["Yes", "No"]);
+    };
+
+    TaskDetail.prototype.handleDeleteConfirmation = function(button) {
+      if (button === 1) {
+        this.model.destroy();
+        return this.showTaskList();
+      }
+    };
+
+    TaskDetail.prototype.showTaskList = function() {
+      return this.app.showView("taskList", {
+        state: this.model.get("state")
+      });
     };
 
     return TaskDetail;

@@ -6,7 +6,7 @@ class Views.SignIn extends Views.PageView
 
   initialize: ->
     @app = @options.app
-    @template = Templates["sign_in"]
+    @template = Templates.sign_in
 
   render: ->
     @$el.html @template()

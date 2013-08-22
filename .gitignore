@@ -5,3 +5,4 @@ platforms/ios/Triage.xcodeproj/project.xcworkspace/xcuserdata/
 platforms/ios/Triage.xcodeproj/project.xcworkspace/xcshareddata/
 .DS_Store
 */**/.DS_Store
+www/assets/

@@ -1749,13 +1749,13 @@ ul.segmented-controller li a span.label {
 }
 
 /* line 137, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#sign-in h3 {
+#sign-in h3, #sign-up h3 {
   margin-bottom: 0.5em;
   padding-left: 0.5em;
   color: #888;
 }
 /* line 143, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#sign-in #sign-in-error-message {
+#sign-in #sign-in-error-message, #sign-in #sign-up-error-message, #sign-up #sign-in-error-message, #sign-up #sign-up-error-message {
   display: none;
   color: red;
   font-style: italic;
@@ -1853,11 +1853,15 @@ ul.segmented-controller li a span.label {
   float: right;
 }
 
-/* line 250, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 248, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+#new-task {
+  bottom: -1px;
+}
+/* line 251, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #new-task form {
   padding: 0.5em;
 }
-/* line 253, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 254, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #new-task form input {
   height: 2.45em;
   padding: 0.2em 0.6em;

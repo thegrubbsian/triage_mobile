@@ -3,6 +3,7 @@ class Views.TaskDetail extends Views.PageView
   events:
     "click #save-button": "handleSave"
     "click #state-selector a": "handleStateSelected"
+    "click #delete-button": "handleDeleteButton"
 
   initialize: ->
     @app = @options.app
@@ -18,7 +19,7 @@ class Views.TaskDetail extends Views.PageView
     $form = @$el.find "form"
     taskAttrs = Helpers.formData $form
     @model.save taskAttrs
-    @app.showView "taskList", { state: @model.get("state") }
+    @showTaskList()
 
   handleStateSelected: (e) ->
     @clearStateSelection()
@@ -28,3 +29,15 @@ class Views.TaskDetail extends Views.PageView
   clearStateSelection: ->
     $stateSelector = @$el.find "#state-selector"
     $stateSelector.find("input[type='radio']").removeAttr "checked"
+
+  handleDeleteButton: ->
+    navigator.notification.confirm "Are you sure you want to delete this task?",
+      @handleDeleteConfirmation, "Confirm Delete", ["Yes", "No"]
+
+  handleDeleteConfirmation: (button) =>
+    if (button == 1)
+      @model.destroy()
+      @showTaskList()
+
+  showTaskList: ->
+    @app.showView "taskList", { state: @model.get("state") }

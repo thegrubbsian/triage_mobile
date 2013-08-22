@@ -6,7 +6,7 @@ class Views.SignUp extends Views.PageView
 
   initialize: ->
     @app = @options.app
-    @template = Templates["sign_up"]
+    @template = Templates.sign_up
 
   render: ->
     @$el.html @template()
@@ -15,7 +15,7 @@ class Views.SignUp extends Views.PageView
     formData = Helpers.formData(@$el.find("#sign-up-form"))
     @app.currentUser.signUp formData, error: @signUpFailure
 
-  signUpFailure: ->
+  signUpFailure: =>
     @$el.find("#sign-up-error-message").show()
 
   handleSignInLink: ->

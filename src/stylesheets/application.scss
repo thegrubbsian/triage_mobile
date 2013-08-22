@@ -132,7 +132,7 @@ ul.segmented-controller {
   }
 }
 
-#sign-in {
+#sign-in, #sign-up {
 
   h3 {
     margin-bottom: 0.5em;
@@ -140,7 +140,7 @@ ul.segmented-controller {
     color: #888;
   }
 
-  #sign-in-error-message {
+  #sign-in-error-message, #sign-up-error-message {
     display: none;
     color: red;
     font-style: italic;
@@ -246,6 +246,7 @@ ul.segmented-controller {
 }
 
 #new-task {
+  bottom: -1px;
 
   form {
     padding: 0.5em;

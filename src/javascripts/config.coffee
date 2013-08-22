@@ -9,10 +9,10 @@ Config = ->
       serverUrl: "http://localhost:3000"
 
     staging:
-      serverUrl: "http://galrme-staging.herokuapp.com"
+      serverUrl: "http://triage-app-staging.herokuapp.com"
 
     production:
-      serverUrl: "https://galrme-production.herokuapp.com"
+      serverUrl: "https://triage-app-production.herokuapp.com"
 
   setEnv: (env) ->
     environment = env
