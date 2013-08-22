@@ -28,14 +28,15 @@ a.button, #back-button {
   }
 }
 
-header {
+header.bar-title {
 
-  .bar-title {
+  h1 {
 
-    h1 {
+    span {
 
-      span {
-        font-size: 0.8em;
+      &.icon {
+        position: relative;
+        top: 2px;
       }
     }
   }
@@ -175,6 +176,9 @@ ul.segmented-controller {
         font-size: 1.5em;
         color: $list-icon-color;
         margin-right: 0.25em;
+        position: absolute;
+        top: 50%;
+        margin-top: -9px;
       }
 
       span.name {
@@ -183,6 +187,18 @@ ul.segmented-controller {
         overflow: hidden;
         white-space: nowrap;
         width: 85%;
+        padding-left: 2.25em;
+      }
+
+      span.due_at {
+        display: block;
+        color: #bbb;
+        margin-top: 0.4em;
+        font-size: 0.9em;
+
+        &.past {
+          color: red;
+        }
       }
 
       span.arrow {

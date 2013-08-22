@@ -19574,6 +19574,19 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Task.prototype.name = "Task";
 
+    Task.prototype.pastDue = function() {
+      var dueAt, now;
+      now = new Date();
+      dueAt = new Date(this.get("due_at"));
+      return now > dueAt;
+    };
+
+    Task.prototype.displayDueAt = function() {
+      var date;
+      date = this.get("due_at");
+      return moment(date).format("ddd, MMM Do, YYYY");
+    };
+
     return Task;
 
   })(Backbone.Model);

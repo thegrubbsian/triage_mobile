@@ -1,5 +1,12 @@
 <li data-id="<%= task.id %>">
   <span class="order icon-list"></span>
-  <span class="name"><%= task.get("name") %></span>
+  <span class="name">
+    <%= task.get("name") %>
+    <% if (task.has("due_at")) { %>
+      <span class="due_at <%= task.pastDue() ? "past" : "" %>">
+        <span class="icon-calendar"></span>&nbsp;<%= task.displayDueAt() %>
+      </span>
+    <% } %>
+  </span>
   <span class="arrow icon-arrow-right"></span>
 </li>
