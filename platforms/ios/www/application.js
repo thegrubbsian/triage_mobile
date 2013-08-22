@@ -19439,6 +19439,9 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       });
       return data;
     },
+    displayDate: function(date) {
+      return moment(date).format("ddd, MMM Do, YYYY");
+    },
     currentTimezoneOffset: function() {
       var dstDiff, dstObserved, dstPeriod, i, january, januaryOffset, july, julyOffset, lastEndDay, lastStartDay, offset, period, today, year;
       dstPeriod = {};
@@ -19579,12 +19582,6 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       now = new Date();
       dueAt = new Date(this.get("due_at"));
       return now > dueAt;
-    };
-
-    Task.prototype.displayDueAt = function() {
-      var date;
-      date = this.get("due_at");
-      return moment(date).format("ddd, MMM Do, YYYY");
     };
 
     return Task;

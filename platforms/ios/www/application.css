@@ -1833,7 +1833,7 @@ ul.segmented-controller li a span.label {
 }
 /* line 226, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail textarea {
-  height: 10em;
+  height: 14em;
 }
 /* line 230, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail input[type="radio"] {

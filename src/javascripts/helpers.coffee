@@ -17,6 +17,9 @@ window.Helpers =
       data[name] = value if value
     data
 
+  displayDate: (date) ->
+    moment(date).format("ddd, MMM Do, YYYY")
+
   currentTimezoneOffset: ->
     dstPeriod = {}
     lastStartDay = 11

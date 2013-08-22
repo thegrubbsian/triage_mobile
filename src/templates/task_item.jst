@@ -4,7 +4,8 @@
     <%= task.get("name") %>
     <% if (task.has("due_at")) { %>
       <span class="due_at <%= task.pastDue() ? "past" : "" %>">
-        <span class="icon-calendar"></span>&nbsp;<%= task.displayDueAt() %>
+        <span class="icon-calendar"></span>&nbsp;
+        <%= Helpers.displayDate(task.get("due_at")) %>
       </span>
     <% } %>
   </span>
