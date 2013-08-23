@@ -19584,6 +19584,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return now > dueAt;
     };
 
+    Task.prototype.archive = function() {
+      this.set("state", "archived");
+      return this.save();
+    };
+
     return Task;
 
   })(Backbone.Model);
@@ -19937,7 +19942,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     TaskDetail.prototype.events = {
       "click #save-button": "handleSave",
       "click #state-selector a": "handleStateSelected",
-      "click #delete-button": "handleDeleteButton"
+      "click #delete-button": "handleDeleteButton",
+      "click #archive-button": "handleArchiveButton"
     };
 
     TaskDetail.prototype.initialize = function() {
@@ -19987,9 +19993,17 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       }
     };
 
-    TaskDetail.prototype.showTaskList = function() {
+    TaskDetail.prototype.handleArchiveButton = function() {
+      this.model.archive();
+      return this.showTaskList("now");
+    };
+
+    TaskDetail.prototype.showTaskList = function(state) {
+      if (!state) {
+        state = this.model.get("state");
+      }
       return this.app.showView("taskList", {
-        state: this.model.get("state")
+        state: state
       });
     };
 

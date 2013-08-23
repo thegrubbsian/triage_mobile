@@ -4,6 +4,7 @@ class Views.TaskDetail extends Views.PageView
     "click #save-button": "handleSave"
     "click #state-selector a": "handleStateSelected"
     "click #delete-button": "handleDeleteButton"
+    "click #archive-button": "handleArchiveButton"
 
   initialize: ->
     @app = @options.app
@@ -39,5 +40,10 @@ class Views.TaskDetail extends Views.PageView
       @model.destroy()
       @showTaskList()
 
-  showTaskList: ->
-    @app.showView "taskList", { state: @model.get("state") }
+  handleArchiveButton: ->
+    @model.archive()
+    @showTaskList("now")
+
+  showTaskList: (state) ->
+    state = @model.get("state") unless state
+    @app.showView "taskList", { state: state }
