@@ -52,7 +52,7 @@ class Views.TaskList extends Views.PageView
 
   handleNewTaskChange: (e) ->
     $el = $(e.target)
-    task = @app.tasks.create(name: $el.val())
+    task = @app.tasks.create name: $el.val(), state: "now"
     @app.showView "taskDetail", { model: task }
 
   handleNewTaskFocus: ->

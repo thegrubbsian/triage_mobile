@@ -5,6 +5,10 @@ class Collections.Tasks extends Backbone.Collection
 
   initialize: ->
     @storage = new Offline.Storage("triage:tasks", @, autoPush: true)
+    @initSync()
+
+  initSync: ->
+    setInterval((=> @storage.sync.incremental()), config.get("syncInterval"))
 
   comparator: (task) ->
     task.get("order_index") * -1

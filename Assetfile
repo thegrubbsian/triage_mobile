@@ -16,6 +16,7 @@ JAVASCRIPTS = [
   "lib/localstore",
   "lib/backbone_proxy_events",
   "lib/ratchet",
+  "lib/spin",
   "namespaces",
   "config",
   "helpers",

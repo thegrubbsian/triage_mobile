@@ -7,12 +7,15 @@ Config = ->
   settings =
     development:
       serverUrl: "http://localhost:3000"
+      syncInterval: 2000
 
     staging:
       serverUrl: "http://triage-app-staging.herokuapp.com"
+      syncInterval: 10000
 
     production:
       serverUrl: "https://triage-app-production.herokuapp.com"
+      syncInterval: 10000
 
   setEnv: (env) ->
     environment = env
