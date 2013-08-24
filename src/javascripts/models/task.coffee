@@ -7,6 +7,18 @@ class Models.Task extends Backbone.Model
     dueAt = new Date(@get "due_at")
     now > dueAt
 
-  archive: ->
-    @set("state", "archived")
-    @save()
+  delete: (cb) ->
+    navigator.notification.confirm "Are you sure you want to delete this task?",
+      (=> @handleDeleteConfirmation(cb)), "Confirm Delete", ["Yes", "No"]
+
+  archive: (cb) ->
+    navigator.notification.confirm "Are you sure you want to archive this task?",
+      (=> @handleArchiveConfirmation(cb)), "Confirm Archive", ["Yes", "No"]
+
+  handleArchiveConfirmation: (cb) =>
+    @save state: "archived"
+    cb()
+
+  handleDeleteConfirmation: (cb) =>
+    @destroy()
+    cb()

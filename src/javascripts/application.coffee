@@ -39,8 +39,10 @@ class Application extends Backbone.Base
     @viewHandler.register "signIn", new Views.SignIn(el: "#sign-in", app: this)
     @viewHandler.register "signUp", new Views.SignUp(el: "#sign-up", app: this)
     @viewHandler.register "taskDetail", new Views.TaskDetail(el: "#task-detail", app: this)
-    @viewHandler.register "taskList",
-      new Views.TaskList(el: "#task-list", app: @, collection: @tasks)
+
+    taskListView = new Views.TaskList(el: "#task-list", app: @, collection: @tasks)
+    @viewHandler.register "taskList", taskListView
+    @proxyEvents taskListView
 
     @settingsModal = new Views.SettingsModal(el: "#settings-modal")
     @proxyEvents @settingsModal
@@ -78,6 +80,7 @@ class Application extends Backbone.Base
 
   showView: (name, data) ->
     @viewHandler.show name, data
+    @trigger "uiChanged"
 
   handleTasksLoaded: ->
     setTimeout (=> @showView "taskList", { state: "now" }), 100

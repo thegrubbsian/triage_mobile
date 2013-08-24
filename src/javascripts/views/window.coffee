@@ -12,3 +12,4 @@ class Views.Window extends Backbone.View
 
   handleSettingsButton: ->
     @trigger "showSettingsModal"
+    @trigger "uiChanged"

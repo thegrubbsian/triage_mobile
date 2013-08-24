@@ -1,8 +1,10 @@
 class Views.TaskList extends Views.PageView
 
   events:
-    "change #new-task-field": "handleNewTask"
+    "change #new-task-field": "handleNewTaskChange"
+    "focus #new-task-field": "handleNewTaskFocus"
     "click #tabs li": "changeTab"
+    "touchmove .content": "handleScroll"
 
   initialize: ->
     @app = @options.app
@@ -10,10 +12,11 @@ class Views.TaskList extends Views.PageView
     @template = Templates.task_list
 
   preRender: (data) ->
+    @showTabs = data.showTabs is true
     @state = data.state
 
   render: ->
-    @$el.html @template(state: @state)
+    @$el.html @template(state: @state, showTabs: @showTabs)
     @renderList(@state)
 
   changeTab: (e) ->
@@ -32,6 +35,7 @@ class Views.TaskList extends Views.PageView
   renderItem: (task, $list) ->
     itemView = new Views.TaskItem(model: task, app: @app)
     itemView.render $list
+    @proxyEvents itemView
 
   initSorting: ->
     @$el.find("ul.list").sortable
@@ -46,7 +50,13 @@ class Views.TaskList extends Views.PageView
     taskAfterId = ($item.next().length > 0) && $item.next().data("id")
     @collection.updateSortOrder(taskId, taskBeforeId, taskAfterId)
 
-  handleNewTask: (e) ->
+  handleNewTaskChange: (e) ->
     $el = $(e.target)
     task = @app.tasks.create(name: $el.val())
     @app.showView "taskDetail", { model: task }
+
+  handleNewTaskFocus: ->
+    @trigger "uiChanged"
+
+  handleScroll: ->
+    @trigger "uiChanged"

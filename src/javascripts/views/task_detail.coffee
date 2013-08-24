@@ -32,17 +32,16 @@ class Views.TaskDetail extends Views.PageView
     $stateSelector.find("input[type='radio']").removeAttr "checked"
 
   handleDeleteButton: ->
-    navigator.notification.confirm "Are you sure you want to delete this task?",
-      @handleDeleteConfirmation, "Confirm Delete", ["Yes", "No"]
+    @model.delete @handleDeleteComplete
 
-  handleDeleteConfirmation: (button) =>
-    if (button == 1)
-      @model.destroy()
-      @showTaskList()
+  handleDeleteComplete: =>
+    @showTaskList()
 
   handleArchiveButton: ->
-    @model.archive()
-    @showTaskList("now")
+    @model.archive @handleArchiveComplete
+
+  handleArchiveComplete: =>
+    @showTaskList "now"
 
   showTaskList: (state) ->
     state = @model.get("state") unless state

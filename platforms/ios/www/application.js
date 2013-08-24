@@ -19564,6 +19564,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -19571,6 +19572,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(Task, _super);
 
     function Task() {
+      this.handleDeleteConfirmation = __bind(this.handleDeleteConfirmation, this);
+      this.handleArchiveConfirmation = __bind(this.handleArchiveConfirmation, this);
       _ref = Task.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -19584,9 +19587,30 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return now > dueAt;
     };
 
-    Task.prototype.archive = function() {
-      this.set("state", "archived");
-      return this.save();
+    Task.prototype["delete"] = function(cb) {
+      var _this = this;
+      return navigator.notification.confirm("Are you sure you want to delete this task?", (function() {
+        return _this.handleDeleteConfirmation(cb);
+      }), "Confirm Delete", ["Yes", "No"]);
+    };
+
+    Task.prototype.archive = function(cb) {
+      var _this = this;
+      return navigator.notification.confirm("Are you sure you want to archive this task?", (function() {
+        return _this.handleArchiveConfirmation(cb);
+      }), "Confirm Archive", ["Yes", "No"]);
+    };
+
+    Task.prototype.handleArchiveConfirmation = function(cb) {
+      this.save({
+        state: "archived"
+      });
+      return cb();
+    };
+
+    Task.prototype.handleDeleteConfirmation = function(cb) {
+      this.destroy();
+      return cb();
     };
 
     return Task;
@@ -19752,7 +19776,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Window.prototype.handleSettingsButton = function() {
-      return this.trigger("showSettingsModal");
+      this.trigger("showSettingsModal");
+      return this.trigger("uiChanged");
     };
 
     return Window;
@@ -19934,7 +19959,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(TaskDetail, _super);
 
     function TaskDetail() {
-      this.handleDeleteConfirmation = __bind(this.handleDeleteConfirmation, this);
+      this.handleArchiveComplete = __bind(this.handleArchiveComplete, this);
+      this.handleDeleteComplete = __bind(this.handleDeleteComplete, this);
       _ref = TaskDetail.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -19983,18 +20009,18 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskDetail.prototype.handleDeleteButton = function() {
-      return navigator.notification.confirm("Are you sure you want to delete this task?", this.handleDeleteConfirmation, "Confirm Delete", ["Yes", "No"]);
+      return this.model["delete"](this.handleDeleteComplete);
     };
 
-    TaskDetail.prototype.handleDeleteConfirmation = function(button) {
-      if (button === 1) {
-        this.model.destroy();
-        return this.showTaskList();
-      }
+    TaskDetail.prototype.handleDeleteComplete = function() {
+      return this.showTaskList();
     };
 
     TaskDetail.prototype.handleArchiveButton = function() {
-      this.model.archive();
+      return this.model.archive(this.handleArchiveComplete);
+    };
+
+    TaskDetail.prototype.handleArchiveComplete = function() {
       return this.showTaskList("now");
     };
 
@@ -20014,6 +20040,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 }).call(this);
 (function() {
   var _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -20021,31 +20048,72 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     __extends(TaskItem, _super);
 
     function TaskItem() {
+      this.handleArchiveDeleteComplete = __bind(this.handleArchiveDeleteComplete, this);
+      this.hideSwiper = __bind(this.hideSwiper, this);
       _ref = TaskItem.__super__.constructor.apply(this, arguments);
       return _ref;
     }
 
     TaskItem.prototype.events = {
-      "click": "handleTap"
+      "click": "handleClick",
+      "swipeleft": "handleSwipe",
+      "click .delete": "handleDeleteClick",
+      "click .archive": "handleArchiveClick"
     };
 
     TaskItem.prototype.initialize = function() {
       this.app = this.options.app;
-      return this.template = Templates.task_item;
+      this.template = Templates.task_item;
+      return this.app.on("uiChanged", this.hideSwiper);
     };
 
     TaskItem.prototype.render = function($list) {
       this.$el = $(this.template({
         task: this.model
       })).appendTo($list);
+      this.$swiper = this.$el.find(".swiper");
       return this.delegateEvents();
     };
 
-    TaskItem.prototype.handleTap = function(e) {
+    TaskItem.prototype.handleClick = function(e) {
       e.preventDefault();
       return this.app.showView("taskDetail", {
         model: this.model
       });
+    };
+
+    TaskItem.prototype.handleSwipe = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.trigger("uiChanged");
+      return this.showSwiper();
+    };
+
+    TaskItem.prototype.showSwiper = function() {
+      this.$swiper.attr("class", "swiper show");
+      return this.swiperOpen = true;
+    };
+
+    TaskItem.prototype.hideSwiper = function() {
+      this.$swiper.attr("class", "swiper");
+      return this.swiperOpen = false;
+    };
+
+    TaskItem.prototype.handleDeleteClick = function(e) {
+      e.stopPropagation();
+      return this.model["delete"](this.handleArchiveDeleteComplete);
+    };
+
+    TaskItem.prototype.handleArchiveDeleteComplete = function() {
+      var _this = this;
+      return this.$el.fadeOut(function() {
+        return _this.remove();
+      });
+    };
+
+    TaskItem.prototype.handleArchiveClick = function(e) {
+      e.stopPropagation();
+      return this.model.archive(this.handleArchiveDeleteComplete);
     };
 
     return TaskItem;
@@ -20069,8 +20137,10 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     }
 
     TaskList.prototype.events = {
-      "change #new-task-field": "handleNewTask",
-      "click #tabs li": "changeTab"
+      "change #new-task-field": "handleNewTaskChange",
+      "focus #new-task-field": "handleNewTaskFocus",
+      "click #tabs li": "changeTab",
+      "touchmove .content": "handleScroll"
     };
 
     TaskList.prototype.initialize = function() {
@@ -20080,12 +20150,14 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskList.prototype.preRender = function(data) {
+      this.showTabs = data.showTabs === true;
       return this.state = data.state;
     };
 
     TaskList.prototype.render = function() {
       this.$el.html(this.template({
-        state: this.state
+        state: this.state,
+        showTabs: this.showTabs
       }));
       return this.renderList(this.state);
     };
@@ -20116,7 +20188,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         model: task,
         app: this.app
       });
-      return itemView.render($list);
+      itemView.render($list);
+      return this.proxyEvents(itemView);
     };
 
     TaskList.prototype.initSorting = function() {
@@ -20136,7 +20209,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return this.collection.updateSortOrder(taskId, taskBeforeId, taskAfterId);
     };
 
-    TaskList.prototype.handleNewTask = function(e) {
+    TaskList.prototype.handleNewTaskChange = function(e) {
       var $el, task;
       $el = $(e.target);
       task = this.app.tasks.create({
@@ -20145,6 +20218,14 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       return this.app.showView("taskDetail", {
         model: task
       });
+    };
+
+    TaskList.prototype.handleNewTaskFocus = function() {
+      return this.trigger("uiChanged");
+    };
+
+    TaskList.prototype.handleScroll = function() {
+      return this.trigger("uiChanged");
     };
 
     return TaskList;
@@ -20262,6 +20343,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.initViews = function() {
+      var taskListView;
       this.viewHandler = new App.ViewHandler();
       this.windowView = new Views.Window({
         el: "body",
@@ -20280,11 +20362,13 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         el: "#task-detail",
         app: this
       }));
-      this.viewHandler.register("taskList", new Views.TaskList({
+      taskListView = new Views.TaskList({
         el: "#task-list",
         app: this,
         collection: this.tasks
-      }));
+      });
+      this.viewHandler.register("taskList", taskListView);
+      this.proxyEvents(taskListView);
       this.settingsModal = new Views.SettingsModal({
         el: "#settings-modal"
       });
@@ -20341,7 +20425,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.showView = function(name, data) {
-      return this.viewHandler.show(name, data);
+      this.viewHandler.show(name, data);
+      return this.trigger("uiChanged");
     };
 
     Application.prototype.handleTasksLoaded = function() {
