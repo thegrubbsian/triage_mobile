@@ -4,8 +4,10 @@ class Views.SettingsModal extends Backbone.View
     "click #settings-close-button": "handleCloseButton"
     "click #sign-out-button": "handleSignOutButton"
     "click #refresh-button": "handleRefreshButton"
+    "click #archived-button": "handleArchivedButton"
 
   initialize: ->
+    @app = @options.app
     @template = Templates.settings_modal
 
   show: ->
@@ -24,4 +26,11 @@ class Views.SettingsModal extends Backbone.View
 
   handleRefreshButton: ->
     @trigger "refreshTasks"
+    @close()
+
+  handleArchivedButton: (e) ->
+    @app.showView "taskList",
+      state: "archived"
+      showTabs: false
+      showNewTask: false
     @close()

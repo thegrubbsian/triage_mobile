@@ -8,15 +8,18 @@ class Views.TaskList extends Views.PageView
 
   initialize: ->
     @app = @options.app
-    @state = @options.state || "now"
+    @state = @options.state ? "now"
+    @showTabs = true
+    @showNewTask = true
     @template = Templates.task_list
 
   preRender: (data) ->
-    @showTabs = data.showTabs is true
+    @showTabs = data.showTabs ? true
+    @showNewTask = data.showNewTask ? true
     @state = data.state
 
   render: ->
-    @$el.html @template(state: @state, showTabs: @showTabs)
+    @$el.html @template(state: @state, showTabs: @showTabs, showNewTask: @showNewTask)
     @renderList(@state)
 
   changeTab: (e) ->

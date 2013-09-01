@@ -1,8 +1,13 @@
-<%= Templates._header() %>
-<%= Templates._tabs({ selected: state }) %>
+<%= Templates._header({ showBackButton: state == "archived" }) %>
+
+<% if (showTabs) { %>
+  <%= Templates._tabs({ selected: state }) %>
+<% } %>
 
 <div class="content">
   <ul class="list"></ul>
 </div>
 
-<%= Templates._new_task() %>
+<% if (showNewTask) { %>
+  <%= Templates._new_task() %>
+<% } %>

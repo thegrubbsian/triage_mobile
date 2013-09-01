@@ -33,18 +33,18 @@ class Application extends Backbone.Base
   initViews: ->
     @viewHandler = new App.ViewHandler()
 
-    @windowView = new Views.Window(el: "body", app: this)
+    @windowView = new Views.Window(el: "body", app: @)
     @proxyEvents @windowView
 
-    @viewHandler.register "signIn", new Views.SignIn(el: "#sign-in", app: this)
-    @viewHandler.register "signUp", new Views.SignUp(el: "#sign-up", app: this)
-    @viewHandler.register "taskDetail", new Views.TaskDetail(el: "#task-detail", app: this)
+    @viewHandler.register "signIn", new Views.SignIn(el: "#sign-in", app: @)
+    @viewHandler.register "signUp", new Views.SignUp(el: "#sign-up", app: @)
+    @viewHandler.register "taskDetail", new Views.TaskDetail(el: "#task-detail", app: @)
 
     taskListView = new Views.TaskList(el: "#task-list", app: @, collection: @tasks)
     @viewHandler.register "taskList", taskListView
     @proxyEvents taskListView
 
-    @settingsModal = new Views.SettingsModal(el: "#settings-modal")
+    @settingsModal = new Views.SettingsModal(el: "#settings-modal", app: @)
     @proxyEvents @settingsModal
 
   bindEvents: ->

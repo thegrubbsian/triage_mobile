@@ -19739,11 +19739,11 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       },
       staging: {
         serverUrl: "http://triage-app-staging.herokuapp.com",
-        syncInterval: 10000
+        syncInterval: 60000
       },
       production: {
         serverUrl: "https://triage-app-production.herokuapp.com",
-        syncInterval: 10000
+        syncInterval: 60000
       }
     };
     return {
@@ -20093,9 +20093,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     ViewHandler.prototype.show = function(name, data) {
-      if (typeof data === "undefined") {
-        data = {};
-      }
+      data = data != null ? data : {};
       if (this.current() && this.current().name === name) {
         return;
       }
@@ -20196,6 +20194,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       if (typeof isGoingBack === "undefined") {
         isGoingBack = false;
       }
+      console.log(data);
       if (this.preRender) {
         autoRender = this.preRender(data, isGoingBack);
         if (autoRender !== false) {
@@ -20535,20 +20534,26 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     TaskList.prototype.initialize = function() {
+      var _ref1;
       this.app = this.options.app;
-      this.state = this.options.state || "now";
+      this.state = (_ref1 = this.options.state) != null ? _ref1 : "now";
+      this.showTabs = true;
+      this.showNewTask = true;
       return this.template = Templates.task_list;
     };
 
     TaskList.prototype.preRender = function(data) {
-      this.showTabs = data.showTabs === true;
+      var _ref1, _ref2;
+      this.showTabs = (_ref1 = data.showTabs) != null ? _ref1 : true;
+      this.showNewTask = (_ref2 = data.showNewTask) != null ? _ref2 : true;
       return this.state = data.state;
     };
 
     TaskList.prototype.render = function() {
       this.$el.html(this.template({
         state: this.state,
-        showTabs: this.showTabs
+        showTabs: this.showTabs,
+        showNewTask: this.showNewTask
       }));
       return this.renderList(this.state);
     };
@@ -20641,10 +20646,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     SettingsModal.prototype.events = {
       "click #settings-close-button": "handleCloseButton",
       "click #sign-out-button": "handleSignOutButton",
-      "click #refresh-button": "handleRefreshButton"
+      "click #refresh-button": "handleRefreshButton",
+      "click #archived-button": "handleArchivedButton"
     };
 
     SettingsModal.prototype.initialize = function() {
+      this.app = this.options.app;
       return this.template = Templates.settings_modal;
     };
 
@@ -20668,6 +20675,15 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     SettingsModal.prototype.handleRefreshButton = function() {
       this.trigger("refreshTasks");
+      return this.close();
+    };
+
+    SettingsModal.prototype.handleArchivedButton = function(e) {
+      this.app.showView("taskList", {
+        state: "archived",
+        showTabs: false,
+        showNewTask: false
+      });
       return this.close();
     };
 
@@ -20762,7 +20778,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       this.viewHandler.register("taskList", taskListView);
       this.proxyEvents(taskListView);
       this.settingsModal = new Views.SettingsModal({
-        el: "#settings-modal"
+        el: "#settings-modal",
+        app: this
       });
       return this.proxyEvents(this.settingsModal);
     };

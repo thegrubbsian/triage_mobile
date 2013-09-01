@@ -11,11 +11,11 @@ Config = ->
 
     staging:
       serverUrl: "http://triage-app-staging.herokuapp.com"
-      syncInterval: 10000
+      syncInterval: 60000
 
     production:
       serverUrl: "https://triage-app-production.herokuapp.com"
-      syncInterval: 10000
+      syncInterval: 60000
 
   setEnv: (env) ->
     environment = env

@@ -5,7 +5,7 @@ class App.ViewHandler extends Backbone.Base
   history: []
 
   current: ->
-    return null  if @history.length is 0
+    return null if @history.length is 0
     @history[@history.length - 1]
 
   register: (name, view) ->
@@ -16,7 +16,7 @@ class App.ViewHandler extends Backbone.Base
     @views[name]
 
   back: ->
-    return  if @history.length <= 1
+    return if @history.length <= 1
     if @current()
       prevView = @history.pop()
       @get(prevView.name).back()
@@ -24,11 +24,9 @@ class App.ViewHandler extends Backbone.Base
     @trigger "changingView", @current().name
 
   show: (name, data) ->
-    data = {}  if typeof data is "undefined"
-    return  if @current() and @current().name is name
-    @get(@current().name).forward()  if @current()
-    @history.push
-      name: name
-      data: data
+    data = data ? {}
+    return if @current() and @current().name is name
+    @get(@current().name).forward() if @current()
+    @history.push name: name, data: data
     @get(name).show data, false
     @trigger "changingView", @current().name

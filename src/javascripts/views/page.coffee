@@ -2,6 +2,7 @@ class Views.PageView extends Backbone.View
 
   show: (data, isGoingBack) ->
     isGoingBack = false  if typeof isGoingBack is "undefined"
+    console.log data
     if @preRender
       autoRender = @preRender(data, isGoingBack)
       if autoRender isnt false
