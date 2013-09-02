@@ -18317,13 +18317,16 @@ if (typeof define !== 'undefined' && define.amd) {
       };
 
       Sync.prototype.incremental = function(options) {
-        var _this = this;
+        var success,
+          _this = this;
         if (options == null) {
           options = {};
         }
+        success = options.success || function() {};
         return this.pull(_.extend({}, options, {
           success: function() {
-            return _this.push();
+            _this.push();
+            return success();
           }
         }));
       };
@@ -20003,8 +20006,12 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     Tasks.prototype.initSync = function() {
       var _this = this;
       return setInterval((function() {
-        return _this.storage.sync.incremental();
+        return _this.synchronize();
       }), config.get("syncInterval"));
+    };
+
+    Tasks.prototype.synchronize = function(options) {
+      return this.storage.sync.incremental(options);
     };
 
     Tasks.prototype.comparator = function(task) {
@@ -20191,10 +20198,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     PageView.prototype.show = function(data, isGoingBack) {
       var autoRender;
-      if (typeof isGoingBack === "undefined") {
-        isGoingBack = false;
-      }
-      console.log(data);
+      isGoingBack = isGoingBack != null ? isGoingBack : false;
       if (this.preRender) {
         autoRender = this.preRender(data, isGoingBack);
         if (autoRender !== false) {
@@ -20210,6 +20214,8 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
         }
       }
     };
+
+    PageView.prototype.reload = function() {};
 
     PageView.prototype.back = function() {
       return this.out("right");
@@ -20679,7 +20685,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     SettingsModal.prototype.handleArchivedButton = function(e) {
-      this.app.showView("taskList", {
+      this.app.showView("archivedList", {
         state: "archived",
         showTabs: false,
         showNewTask: false
@@ -20751,7 +20757,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
     };
 
     Application.prototype.initViews = function() {
-      var taskListView;
+      var archivedListView, taskListView;
       this.viewHandler = new App.ViewHandler();
       this.windowView = new Views.Window({
         el: "body",
@@ -20777,6 +20783,13 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
       });
       this.viewHandler.register("taskList", taskListView);
       this.proxyEvents(taskListView);
+      archivedListView = new Views.TaskList({
+        el: "#archived-list",
+        app: this,
+        collection: this.tasks
+      });
+      this.viewHandler.register("archivedList", archivedListView);
+      this.proxyEvents(archivedListView);
       this.settingsModal = new Views.SettingsModal({
         el: "#settings-modal",
         app: this
@@ -20820,7 +20833,7 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Application.prototype.fetchTasks = function() {
       var _this = this;
-      return this.tasks.fetch({
+      return this.tasks.synchronize({
         success: function() {
           return _this.handleTasksLoaded();
         }

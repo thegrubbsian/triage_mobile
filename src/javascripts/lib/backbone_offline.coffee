@@ -226,7 +226,11 @@ do (global = window, _, Backbone) ->
     # 1. pull() - request data from server
     # 2. push() - send modified data to server
     incremental:(options = {}) ->
-      @pull _.extend {}, options, success: => @push()
+
+      # TODO: Send pull-request for being able to pass in a success function
+      success = options.success || ->
+
+      @pull _.extend {}, options, success: => @push(); success()
 
     # Runs incremental sync when storage was offline
     # after current request therefore don't duplicate requests

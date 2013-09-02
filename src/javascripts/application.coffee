@@ -44,6 +44,10 @@ class Application extends Backbone.Base
     @viewHandler.register "taskList", taskListView
     @proxyEvents taskListView
 
+    archivedListView = new Views.TaskList(el: "#archived-list", app: @, collection: @tasks)
+    @viewHandler.register "archivedList", archivedListView
+    @proxyEvents archivedListView
+
     @settingsModal = new Views.SettingsModal(el: "#settings-modal", app: @)
     @proxyEvents @settingsModal
 
@@ -73,7 +77,7 @@ class Application extends Backbone.Base
     @fetchTasks()
 
   fetchTasks: ->
-    @tasks.fetch success: => @handleTasksLoaded()
+    @tasks.synchronize success: => @handleTasksLoaded()
 
   authenticateUser: ->
     @showView "signIn"  unless @currentUser.attemptAutoSignIn()

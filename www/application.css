@@ -1780,24 +1780,24 @@ ul.segmented-controller li a span.label {
 }
 
 /* line 168, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list .content {
+#task-list .content, #archived-list .content {
   top: 88px;
   padding-bottom: 40px;
 }
 /* line 175, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li {
+#task-list ul.list li, #archived-list ul.list li {
   position: relative;
   overflow: hidden;
   position: relative;
   background-color: #fff;
 }
 /* line 181, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li.ui-sortable-helper {
+#task-list ul.list li.ui-sortable-helper, #archived-list ul.list li.ui-sortable-helper {
   box-shadow: 0 0 6px #d9d9d9;
   background-color: #fafafa;
 }
 /* line 186, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li span.order {
+#task-list ul.list li span.order, #archived-list ul.list li span.order {
   float: left;
   font-size: 1.5em;
   color: #bfbfbf;
@@ -1807,7 +1807,7 @@ ul.segmented-controller li a span.label {
   margin-top: -9px;
 }
 /* line 196, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li span.name {
+#task-list ul.list li span.name, #archived-list ul.list li span.name {
   float: left;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -1816,18 +1816,18 @@ ul.segmented-controller li a span.label {
   padding-left: 2.25em;
 }
 /* line 205, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li span.due_at {
+#task-list ul.list li span.due_at, #archived-list ul.list li span.due_at {
   display: block;
   color: #bbb;
   margin-top: 0.4em;
   font-size: 0.9em;
 }
 /* line 211, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li span.due_at.past {
+#task-list ul.list li span.due_at.past, #archived-list ul.list li span.due_at.past {
   color: red;
 }
 /* line 216, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li span.arrow {
+#task-list ul.list li span.arrow, #archived-list ul.list li span.arrow {
   position: absolute;
   top: 50%;
   margin-top: -0.5em;
@@ -1836,7 +1836,7 @@ ul.segmented-controller li a span.label {
   color: #bfbfbf;
 }
 /* line 225, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li .swiper {
+#task-list ul.list li .swiper, #archived-list ul.list li .swiper {
   opacity: 0;
   overflow: hidden;
   position: absolute;
@@ -1847,7 +1847,7 @@ ul.segmented-controller li a span.label {
   background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(255, 255, 255, 0)), color-stop(40%, white));
 }
 /* line 235, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li .swiper a.button {
+#task-list ul.list li .swiper a.button, #archived-list ul.list li .swiper a.button {
   position: absolute;
   z-index: 100000;
   float: right;
@@ -1855,58 +1855,63 @@ ul.segmented-controller li a span.label {
   margin-top: -14px;
 }
 /* line 242, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li .swiper a.button.delete {
+#task-list ul.list li .swiper a.button.delete, #archived-list ul.list li .swiper a.button.delete {
   right: 1em;
 }
 /* line 243, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li .swiper a.button.archive {
+#task-list ul.list li .swiper a.button.archive, #archived-list ul.list li .swiper a.button.archive {
   right: 6.5em;
 }
 /* line 246, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
-#task-list ul.list li .swiper.show {
+#task-list ul.list li .swiper.show, #archived-list ul.list li .swiper.show {
   opacity: 1;
   -webkit-transition: opacity 0.2s ease;
 }
 
 /* line 257, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+#archived-list .content {
+  top: 44px;
+}
+
+/* line 264, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .bar-standard {
   top: 44px;
 }
-/* line 261, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 268, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .content {
   top: 88px;
 }
-/* line 265, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 272, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail textarea {
   height: 14em;
 }
-/* line 269, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 276, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail input[type="radio"] {
   display: none;
 }
-/* line 273, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 280, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group {
   overflow: hidden;
 }
-/* line 276, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 283, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group a.button {
   float: left;
   width: 40%;
 }
-/* line 280, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 287, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #task-detail .action-group a.button:last-child {
   float: right;
 }
 
-/* line 287, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 294, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #new-task {
   bottom: -1px;
 }
-/* line 290, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 297, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #new-task form {
   padding: 0.5em;
 }
-/* line 293, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
+/* line 300, /Users/jcgrubbs/source/triage/triage_mobile/src/stylesheets/application.scss */
 #new-task form input {
   height: 2.45em;
   padding: 0.2em 0.6em;

@@ -1,8 +1,7 @@
 class Views.PageView extends Backbone.View
 
   show: (data, isGoingBack) ->
-    isGoingBack = false  if typeof isGoingBack is "undefined"
-    console.log data
+    isGoingBack = isGoingBack ? false
     if @preRender
       autoRender = @preRender(data, isGoingBack)
       if autoRender isnt false
@@ -13,6 +12,8 @@ class Views.PageView extends Backbone.View
       if @render
         @render()
         @in()
+
+  reload: ->
 
   back: ->
     @out("right")

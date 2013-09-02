@@ -8,7 +8,10 @@ class Collections.Tasks extends Backbone.Collection
     @initSync()
 
   initSync: ->
-    setInterval((=> @storage.sync.incremental()), config.get("syncInterval"))
+    setInterval((=> @synchronize()), config.get("syncInterval"))
+
+  synchronize: (options) ->
+    @storage.sync.incremental(options)
 
   comparator: (task) ->
     task.get("order_index") * -1

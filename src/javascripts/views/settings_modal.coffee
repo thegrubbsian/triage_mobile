@@ -29,7 +29,7 @@ class Views.SettingsModal extends Backbone.View
     @close()
 
   handleArchivedButton: (e) ->
-    @app.showView "taskList",
+    @app.showView "archivedList",
       state: "archived"
       showTabs: false
       showNewTask: false
