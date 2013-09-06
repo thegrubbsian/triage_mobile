@@ -9,16 +9,18 @@ class Models.Task extends Backbone.Model
 
   delete: (cb) ->
     navigator.notification.confirm "Are you sure you want to delete this task?",
-      (=> @handleDeleteConfirmation(cb)), "Confirm Delete", ["Yes", "No"]
+      ((btn) => @handleDeleteConfirmation(btn, cb)), "Confirm Delete", ["Yes", "No"]
 
   archive: (cb) ->
     navigator.notification.confirm "Are you sure you want to archive this task?",
-      (=> @handleArchiveConfirmation(cb)), "Confirm Archive", ["Yes", "No"]
+      ((btn) => @handleArchiveConfirmation(btn, cb)), "Confirm Archive", ["Yes", "No"]
 
-  handleArchiveConfirmation: (cb) =>
-    @save state: "archived"
-    cb()
+  handleArchiveConfirmation: (btn, cb) =>
+    if (btn == 1)
+      @save state: "archived"
+      cb()
 
-  handleDeleteConfirmation: (cb) =>
-    @destroy()
-    cb()
+  handleDeleteConfirmation: (btn, cb) =>
+    if (btn == 1)
+      @destroy()
+      cb()

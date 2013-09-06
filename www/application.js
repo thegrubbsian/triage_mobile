@@ -19950,28 +19950,32 @@ _.extend(Backbone.Base.prototype, Backbone.Events, {
 
     Task.prototype["delete"] = function(cb) {
       var _this = this;
-      return navigator.notification.confirm("Are you sure you want to delete this task?", (function() {
-        return _this.handleDeleteConfirmation(cb);
+      return navigator.notification.confirm("Are you sure you want to delete this task?", (function(btn) {
+        return _this.handleDeleteConfirmation(btn, cb);
       }), "Confirm Delete", ["Yes", "No"]);
     };
 
     Task.prototype.archive = function(cb) {
       var _this = this;
-      return navigator.notification.confirm("Are you sure you want to archive this task?", (function() {
-        return _this.handleArchiveConfirmation(cb);
+      return navigator.notification.confirm("Are you sure you want to archive this task?", (function(btn) {
+        return _this.handleArchiveConfirmation(btn, cb);
       }), "Confirm Archive", ["Yes", "No"]);
     };
 
-    Task.prototype.handleArchiveConfirmation = function(cb) {
-      this.save({
-        state: "archived"
-      });
-      return cb();
+    Task.prototype.handleArchiveConfirmation = function(btn, cb) {
+      if (btn === 1) {
+        this.save({
+          state: "archived"
+        });
+        return cb();
+      }
     };
 
-    Task.prototype.handleDeleteConfirmation = function(cb) {
-      this.destroy();
-      return cb();
+    Task.prototype.handleDeleteConfirmation = function(btn, cb) {
+      if (btn === 1) {
+        this.destroy();
+        return cb();
+      }
     };
 
     return Task;
